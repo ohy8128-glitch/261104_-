@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>B 영수증형</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>
+body{margin:0}
+a{color:#FFC94D}a:hover{color:#FFE08F}
+</style>
+</helmet>
+<div style="width: 360px; height: 920px; overflow: hidden; background: #FFFFFF; font-family: 'Noto Sans KR', sans-serif">
+<div style="height: 700px; box-sizing: border-box; background: #0E1016; color: #FFFFFF; font-variant-numeric: tabular-nums; padding: 32px 20px 0; display: flex; flex-direction: column; gap: 16px">
+  <span style="align-self: flex-start; font-size: 13px; font-weight: 700; color: #111111; background: #FFC94D; padding: 6px 12px; border-radius: 999px">관리비도 카드 실적으로 인정</span>
+  <h1 style="margin: 0; font-size: 24px; line-height: 1.4; font-weight: 800; letter-spacing: -0.5px">관리비 + 카드 사용,<br>합쳐서 실적이에요</h1>
+
+  <div style="background: #FFFFFF; color: #111111; border-radius: 20px; padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 13px; color: #5B6170; font-weight: 500">11월 실적 계산</div>
+    <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 16px">
+      <span>관리비 자동납부</span><strong style="font-size: 18px">{{feeStr}}원</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 16px; background: {{addBg}}; margin: 0 -10px; padding: 10px; border-radius: 10px">
+      <span style="display: flex; flex-direction: column; gap: 2px"><span>+ 다른 카드 결제</span><span style="font-size: 12px; color: #5B6170">{{addHint}}</span></span>
+      <strong style="font-size: 18px">{{addStr}}원</strong>
+    </div>
+    <div style="border-top: 2px dashed #D5D8DF"></div>
+    <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 16px">
+      <span>= 실적</span><strong style="font-size: 18px">{{sumStr}}원</strong>
+    </div>
+    <div style="background: #111111; color: #FFFFFF; border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 14px; color: #C9CED9">{{tierLabel}}</span>
+      <strong style="font-size: 20px; color: #FFC94D">{{discStr}}</strong>
+    </div>
+    <sc-if value="{{showNext}}" hint-placeholder-val="{{true}}">
+      <div style="font-size: 13px; color: #5B6170; text-align: center">{{nextStr}}원 더 쓰면 월 10,000원으로 올라가요</div>
+    </sc-if>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <span style="font-size: 13px; color: #A9AFBD">다른 관리비로 계산해보기</span>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <sc-for list="{{chips}}" as="c" hint-placeholder-count="3">
+        <button type="button" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="margin-top: auto; height: 110px; box-sizing: border-box; padding: 15px 0 39px; display: flex; flex-direction: column">
+    <button type="button" style="height: 56px; border: 0; border-radius: 28px; background: #FFFFFF; color: #111111; font: 700 17px/1 'Noto Sans KR', sans-serif; cursor: pointer">카드 혜택 보기</button>
+  </div>
+</div>
+<div style="padding: 40px 20px; color: #111111; display: flex; flex-direction: column; gap: 12px">
+  <span style="align-self: flex-start; font-size: 13px; font-weight: 700; color: #FFFFFF; background: #3F63E8; padding: 4px 10px; border-radius: 999px">Event</span>
+  <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px">최대 15만원 캐시백</h2>
+  <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #333333">아파트관리비 자동납부 신청하고<br>15만원 이상 이용 시</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":920}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { fee: 266880 }; }
+  renderVals() {
+    const f = this.state.fee;
+    const fmt = (n) => Math.round(n).toLocaleString('ko-KR');
+    const s = f >= 1000000 ? 2 : (f >= 500000 ? 1 : 0);
+    const r5 = Math.max(0, 500000 - f), r10 = Math.max(0, 1000000 - f);
+    const on = "height:36px;padding:0 14px;border-radius:999px;border:1px solid #FFC94D;background:#FFC94D;color:#111111;font:700 13px/1 'Noto Sans KR',sans-serif;cursor:pointer";
+    const off = "height:36px;padding:0 14px;border-radius:999px;border:1px solid #3A3F4D;background:transparent;color:#FFFFFF;font:500 13px/1 'Noto Sans KR',sans-serif;cursor:pointer";
+    const chips = [266880, 520000, 1030000].map((v) => ({
+      label: fmt(v) + '원', pressed: String(v === f), style: v === f ? on : off,
+      pick: () => this.setState({ fee: v })
+    }));
+    return {
+      feeStr: fmt(f),
+      addStr: fmt(s === 0 ? r5 : 0),
+      addHint: s === 0 ? '이만큼만 더 쓰면 돼요' : '추가 결제 필요 없어요',
+      addBg: s === 0 ? '#FFF1C7' : '#EEF0F4',
+      sumStr: fmt(s === 0 ? 500000 : f),
+      tierLabel: s === 2 ? '실적 100만 원 달성' : '실적 50만 원 달성',
+      discStr: s === 2 ? '월 10,000원 할인' : '월 6,000원 할인',
+      showNext: s === 1,
+      nextStr: fmt(r10),
+      chips
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="../assets/pretendard.css">
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>관리비 실적계산기 KV</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 리뷰 셸(왼쪽 케이스 선택 · 가운데 실제 크기 폰) + 한눈에 비교(폰 3대). 폰 안은 서비스 화면이라 테마 고정 */
+:root{
+  --bg:#F2F4F6; --panel:#FFFFFF; --line:#E5E8EB; --fg:#191F28; --sub:#4E5968; --muted:#8B95A1;
+  --pick-bg:#F2F4F6; --pick-on-bg:#E8F0FF; --pick-on-line:#3C70FF; --pick-on-fg:#1B56E8;
+  --seg-bg:#E5E8EB; --seg-on:#FFFFFF; --seg-on-fg:#191F28; --bezel:#191F28;
+  --kv-bg:#0D0F14; --kv-glow:#18233F; --kv-fg:#FFFFFF; --kv-2:#C9CED6; --kv-3:#8B93A1; --kv-4:#5F6673; --kv-track:rgba(255,255,255,.08);
+  --blue:#3C70FF; --blue-2:#8FAEFF;
+  --app-bg:#FFFFFF; --app-fg:#191F28; --app-sub:#4E5968; --app-box:#F2F4F6;
+  --sans:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101115; --panel:#1B1D22; --line:#2C2F36; --fg:#F2F4F6; --sub:#C3C9D2; --muted:#8B95A1;
+  --pick-bg:#24262C; --pick-on-bg:#1A2645; --pick-on-line:#4778FF; --pick-on-fg:#9DB8FF;
+  --seg-bg:#2C2F36; --seg-on:#F2F4F6; --seg-on-fg:#191F28; --bezel:#000000; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101115; --panel:#1B1D22; --line:#2C2F36; --fg:#F2F4F6; --sub:#C3C9D2; --muted:#8B95A1;
+  --pick-bg:#24262C; --pick-on-bg:#1A2645; --pick-on-line:#4778FF; --pick-on-fg:#9DB8FF;
+  --seg-bg:#2C2F36; --seg-on:#F2F4F6; --seg-on-fg:#191F28; --bezel:#000000; color-scheme:dark}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--sans);font-size:14px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px;-webkit-font-smoothing:antialiased}
+button{font-family:var(--sans)}
+:focus-visible{outline:2px solid var(--pick-on-line);outline-offset:2px}
+
+/* ---------- 리뷰 셸 ---------- */
+.top{max-width:1200px;margin:0 auto 28px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.top small{display:block;font-size:13px;font-weight:600;color:var(--pick-on-fg);margin-bottom:4px}
+.top h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.4px;text-wrap:balance}
+.vseg{display:inline-flex;background:var(--seg-bg);border-radius:99px;padding:3px}
+.vseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 14px/1 var(--sans);height:36px;padding:0 16px;border-radius:99px;cursor:pointer}
+.vseg button[aria-pressed="true"]{background:var(--seg-on);color:var(--seg-on-fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.proto{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:280px minmax(0,1fr);gap:40px;align-items:start}
+.rail{background:var(--panel);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:20px;position:sticky;top:calc(24px + env(safe-area-inset-top,0px))}
+.rail h2{margin:0 0 10px;font-size:15px;font-weight:600}
+.picks{display:flex;flex-direction:column;gap:8px}
+.picks button{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;border-radius:14px;border:1px solid transparent;background:var(--pick-bg);color:var(--sub);font:600 15px/1.4 var(--sans);text-align:left;cursor:pointer}
+.picks small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.picks i{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--line);box-sizing:border-box;position:relative}
+.picks button[aria-pressed="true"]{background:var(--pick-on-bg);border-color:var(--pick-on-line);color:var(--pick-on-fg)}
+.picks button[aria-pressed="true"] small{color:var(--pick-on-fg);opacity:.75}
+.picks button[aria-pressed="true"] i{border:0;background:var(--pick-on-line)}
+.picks button[aria-pressed="true"] i::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--panel)}
+.note{border-top:1px solid var(--line);padding-top:16px;font-size:14px;color:var(--sub);display:flex;flex-direction:column;gap:6px}
+.note b{font-size:13px;font-weight:600;color:var(--muted)}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.cap{font-size:14px;font-weight:500;color:var(--muted)}.cap b{color:var(--fg);font-weight:600}
+.compare{max-width:1200px;margin:0 auto;overflow-x:auto;padding-bottom:8px}
+.row{display:flex;gap:8px;width:max-content;margin:0 auto}
+.cell{display:flex;flex-direction:column;align-items:center;gap:12px}
+.cell h2{margin:0;font-size:16px;font-weight:700}
+.cell>button{appearance:none;border:0;background:var(--seg-bg);color:var(--sub);font:600 14px/1 var(--sans);height:36px;padding:0 16px;border-radius:99px;cursor:pointer}
+@media (max-width:860px){.proto{grid-template-columns:1fr}.rail{position:static}}
+
+/* ---------- 폰 ---------- */
+.phone{width:360px;height:740px;border:10px solid var(--bezel);border-radius:44px;box-sizing:content-box;overflow:hidden;position:relative;background:var(--app-bg);box-shadow:0 30px 60px -30px rgba(13,16,32,.5);flex:none}
+.compare .phone{transform:scale(.76);transform-origin:top center;margin:0 -45px -178px}
+@media (max-width:420px){.stage .phone{zoom:.86}}
+.ph-head{position:absolute;inset:0 0 auto;height:80px;z-index:5;background:var(--app-bg);color:var(--app-fg)}
+.ph-status{height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:600 12px/1 var(--sans)}
+.ph-status span:last-child{display:flex;gap:4px}
+.ph-status i{display:block;height:9px;background:var(--app-fg);border-radius:2px}
+.ph-nav-top{height:56px;box-sizing:border-box;display:grid;grid-template-columns:24px 1fr 24px;gap:8px;align-items:center;padding:0 20px 0 12px;font:600 16px/1 var(--sans);text-align:center}
+.ph-nav-top svg{width:24px;height:24px}
+.ph-scroll{position:absolute;top:80px;bottom:48px;left:0;right:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
+.ph-scroll::-webkit-scrollbar{display:none}
+.ph-cta{position:absolute;left:0;right:0;bottom:48px;z-index:6;padding:16px 20px;background:linear-gradient(rgba(255,255,255,0),var(--app-bg) 28%)}
+.ph-cta button{width:100%;height:56px;border:0;border-radius:16px;background:var(--blue);color:#FFFFFF;font:600 17px/1 var(--sans);cursor:pointer}
+.ph-nav{position:absolute;inset:auto 0 0;height:48px;z-index:7;background:#f5f5f7 url(a/nav.png) no-repeat 0 0/360px 48px}
+
+/* ---------- KV 360×700 ---------- */
+.kv{position:relative;height:700px;box-sizing:border-box;padding:28px 24px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;color:var(--kv-fg);background:radial-gradient(90% 46% at 50% 60%,var(--kv-glow) 0%,var(--kv-bg) 100%);font-variant-numeric:tabular-nums}
+.kv-eyebrow{margin:0;font-size:13px;font-weight:500;color:var(--kv-3);letter-spacing:.1px}
+.kv-title{margin:6px 0 0;font-size:24px;line-height:1.36;font-weight:700;letter-spacing:-.6px}
+.kv-seg{position:relative;display:grid;grid-template-columns:1fr 1fr;width:100%;height:44px;margin-top:20px;padding:3px;box-sizing:border-box;border-radius:99px;background:rgba(255,255,255,.07)}
+.kv-seg::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:99px;background:#FFFFFF;transition:transform .32s cubic-bezier(.3,.9,.3,1)}
+.kv-seg[data-tab="1"]::before{transform:translateX(100%)}
+.kv-seg button{position:relative;z-index:1;appearance:none;border:0;background:transparent;color:var(--kv-3);font:500 15px/1 var(--sans);cursor:pointer;transition:color .2s}
+.kv-seg button[aria-pressed="true"]{color:#191F28;font-weight:600}
+.kv-seg[hidden]{display:none}
+.kv-seg[hidden]+.meter{margin-top:34px}
+.meter{display:flex;flex-direction:column;align-items:center;margin-top:24px}
+.m-label{display:flex;align-items:center;justify-content:center;gap:6px;height:22px;margin:0;font-size:15px;font-weight:500;color:var(--kv-2)}
+.m-label b{font-weight:600;color:var(--kv-fg)}
+.m-tag{font-size:11px;font-weight:600;line-height:1;color:var(--blue-2);padding:4px 7px;border-radius:99px;background:rgba(143,174,255,.14)}
+.ring{position:relative;width:176px;height:176px;margin-top:12px}
+.ring>svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring .prog{transition:stroke-dashoffset .9s cubic-bezier(.22,1,.36,1)}
+.r-center{position:absolute;inset:0;display:grid;place-items:center}
+.r-center>div{grid-area:1/1;display:flex;flex-direction:column;align-items:center;transition:opacity .25s,transform .35s cubic-bezier(.3,.9,.3,1)}
+.r-pct{font-size:48px;font-weight:700;letter-spacing:-1.6px;line-height:1}
+.r-pct small{font-size:26px;letter-spacing:-.5px;margin-left:1px}
+.r-sub{margin-top:6px;font-size:13px;font-weight:500;color:var(--kv-3)}
+.r-ok svg{width:48px;height:48px;color:var(--blue-2)}
+.r-ok path{stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .45s .35s ease-out}
+.ring:not(.done) .r-ok,.ring.done .r-num{opacity:0;transform:scale(.92);pointer-events:none}
+.ring.done .r-ok path{stroke-dashoffset:0}
+.res{margin:16px 0 0;font-size:20px;line-height:1.42;font-weight:600;letter-spacing:-.4px}
+.res em{font-style:normal;font-weight:700;color:var(--blue-2)}
+.fine{margin:auto 0 0;font-size:12px;line-height:1.5;color:var(--kv-4)}
+@media (prefers-reduced-motion:reduce){.kv-seg::before,.ring .prog,.r-center>div,.r-ok path{transition:none}}
+
+/* ---------- 아래 이벤트 섹션 ---------- */
+.ev{padding:40px 24px 120px;color:var(--app-fg);display:flex;flex-direction:column;gap:10px}
+.ev-tag{align-self:flex-start;font-size:12px;font-weight:600;line-height:1;color:#FFFFFF;background:var(--blue);padding:6px 9px;border-radius:99px}
+.ev h2{margin:4px 0 0;font-size:24px;font-weight:700;letter-spacing:-.5px}
+.ev>p{margin:0;font-size:16px;line-height:1.6;color:var(--app-sub)}
+.ev-box{margin-top:14px;background:var(--app-box);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:18px}
+.ev-box h3{margin:0 0 4px;font-size:15px;font-weight:600}
+.ev-box p{margin:0;font-size:15px;line-height:1.55;color:var(--app-sub)}
+</style>
+
+<header class="top">
+  <div><small>아파트아이 × 디지로카 · 관리비 실적계산기</small><h1>KV 도넛형 · 관리비 케이스 4종</h1></div>
+  <div class="vseg" role="group" aria-label="보기 방식">
+    <button type="button" data-view="proto" aria-pressed="true">프로토타입</button>
+    <button type="button" data-view="compare" aria-pressed="false">한눈에 비교</button>
+  </div>
+</header>
+
+<main id="view-proto" class="proto">
+  <aside class="rail">
+    <div><h2>관리비 케이스</h2><div class="picks" id="picks"></div></div>
+    <div class="note"><b>이 케이스에서</b><span id="note"></span></div>
+  </aside>
+  <section class="stage">
+    <div id="main-phone"></div>
+    <div class="cap"><b id="cap"></b> · 폰 안 탭을 눌러보세요 · 스크롤하면 이벤트가 이어져요</div>
+  </section>
+</main>
+<main id="view-compare" hidden>
+  <div class="compare"><div class="row" id="cmp"></div></div>
+</main>
+
+<script>
+(function(){
+const fmt=n=>Math.round(n).toLocaleString('ko-KR');
+const GOAL=5e5, R=80, CIRC=2*Math.PI*R;
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CASES={
+  under:{name:'50만 원 미만',short:'11월 관리비 266,880원',month:'11월',fee:266880,tabs:['내 관리비','50만 원이라면'],
+    note:'채운 만큼 링이 차고, 더 쓰면 되는 금액 하나만 크게 보여줘요. ‘50만 원이라면’을 누르면 추가 사용 없이 할인되는 모습을 미리 보여줘요.'},
+  nodata:{name:'이번 달 데이터 없음',short:'10월 관리비 248,500원',month:'10월',fee:248500,tabs:['10월 관리비','50만 원이라면'],tag:'11월 집계 전',
+    note:'지난달(10월) 관리비로 계산해요. 왜 10월인지는 ‘11월 집계 전’ 태그 하나로만 알려줘요.'},
+  over:{name:'50만 원 이상',short:'11월 관리비 523,000원',month:'11월',fee:523000,tabs:null,
+    note:'관리비만으로 이미 채웠으니 탭 없이 결과만 보여줘요. 링이 다 차고 체크로 바뀌어요.'},
+  none:{name:'관리비 데이터 없음',short:'지난달 · 이번 달 모두 없음',fee:null,tabs:null,hypOnly:true,tag:'예시',
+    note:'보여줄 내 금액이 없어서 ‘관리비가 50만 원이라면’ 예시만 보여줘요. 지어낸 숫자로 보이지 않게 ‘예시’ 태그를 붙였어요.'}
+};
+const state={c:'under',view:'proto'};
+let uid=0;
+
+function model(c,tab){
+  const C=CASES[c],hyp=!!C.hypOnly||(!!C.tabs&&tab===1),f=hyp?GOAL:C.fee,done=f>=GOAL;
+  return{C,hyp,done,left:Math.max(0,GOAL-f),pct:Math.min(100,Math.round(f/GOAL*100))};
+}
+const HEAD=`<div class="ph-head"><div class="ph-status"><span>12:30</span><span><i style="width:15px"></i><i style="width:20px"></i></span></div><div class="ph-nav-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>매달 든든한 관리비 혜택</span><span></span></div></div>`;
+const EVENT=`<section class="ev"><span class="ev-tag">Event</span><h2>최대 15만원 캐시백</h2><p>아파트관리비 자동납부 신청하고<br>15만원 이상 이용 시</p><div class="ev-box"><div><h3>행사 기간</h3><p>26.11.01(일) ~ 26.11.30(월)</p></div><div><h3>대상</h3><p>직전 6개월 간(26.05.01~26.10.31) 모든 롯데 개인 신용카드 이용 이력이 없는 고객</p></div><div><h3>내용</h3><p>2026년 11월 10일(화)까지 대상 카드로 아파트 관리비 자동납부 신청하고 15만원 이상 이용 시 15만원 캐시백 지급 (아파트관리비 매출은 이용금액에서 제외됩니다.)</p></div></div></section>`;
+
+function phone(c){
+  const id='g'+(++uid),C=CASES[c];
+  return `<div class="phone" data-case="${c}" data-tab="0">${HEAD}<div class="ph-scroll"><div class="kv">
+    <p class="kv-eyebrow">아파트아이 × 디지로카</p>
+    <h1 class="kv-title">관리비도<br>카드 실적이 돼요</h1>
+    <div class="kv-seg" role="group" aria-label="관리비 보기" data-tab="0"${C.tabs?'':' hidden'}>${(C.tabs||['','']).map((l,i)=>`<button type="button" data-tab="${i}" aria-pressed="${i===0}">${l}</button>`).join('')}</div>
+    <div class="meter">
+      <p class="m-label"></p>
+      <div class="ring" role="img">
+        <svg viewBox="0 0 176 176" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3C70FF"/><stop offset="1" stop-color="#9DB8FF"/></linearGradient></defs>
+          <circle cx="88" cy="88" r="${R}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+          <circle class="prog" cx="88" cy="88" r="${R}" fill="none" stroke="url(#${id})" stroke-width="12" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}"/></svg>
+        <div class="r-center"><div class="r-num"><span class="r-pct"><span class="n">0</span><small>%</small></span><span class="r-sub">실적 50만 원 중</span></div>
+          <div class="r-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="r-sub">실적 50만 원 달성</span></div></div>
+      </div>
+      <p class="res"></p>
+    </div>
+    <p class="fine">실적 50만 원 이상이면 관리비 10% 할인 (월 최대 6,000원)</p>
+  </div>${EVENT}</div><div class="ph-cta"><button type="button">카드 보기</button></div><div class="ph-nav" aria-hidden="true"></div></div>`;
+}
+function tween(el,from,to,ms,fmtFn){
+  if(reduce||from===to){el.textContent=fmtFn(to);return}
+  const t0=performance.now();cancelAnimationFrame(el._raf);
+  const step=t=>{const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=fmtFn(from+(to-from)*e);if(k<1)el._raf=requestAnimationFrame(step)};
+  el._raf=requestAnimationFrame(step);
+}
+function update(p){
+  const tab=+p.dataset.tab,m=model(p.dataset.case,tab),C=m.C;
+  const seg=p.querySelector('.kv-seg');seg.dataset.tab=tab;
+  seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.tab===tab)));
+  p.querySelector('.m-label').innerHTML=m.hyp?`<span>관리비가 <b>50만 원</b>이라면</span>${C.hypOnly?`<span class="m-tag">${C.tag}</span>`:''}`:`<span>${C.month} 관리비 <b>${fmt(C.fee)}원</b></span>${C.tag?`<span class="m-tag">${C.tag}</span>`:''}`;
+  const ring=p.querySelector('.ring');ring.classList.toggle('done',m.done);
+  ring.setAttribute('aria-label',m.done?'실적 50만 원 달성':`실적 50만 원 중 ${m.pct}%`);
+  const prog=p.querySelector('.prog');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{prog.style.strokeDashoffset=CIRC*(1-m.pct/100)}));
+  const n=p.querySelector('.n'),prev=+(n.dataset.v||0);n.dataset.v=m.pct;tween(n,prev,m.pct,900,v=>String(Math.round(v)));
+  const res=p.querySelector('.res');
+  if(m.done){res.innerHTML='추가 사용 없이<br><em>월 6,000원 할인</em>돼요';res.dataset.v=0}
+  else{const pv=+(res.dataset.v||m.left*1.25);res.dataset.v=m.left;res.innerHTML='<em><span class="a"></span>원</em>만 더 쓰면<br>월 6,000원 할인돼요';tween(res.querySelector('.a'),pv,m.left,900,fmt)}
+}
+function mount(host,html){host.innerHTML=html;host.querySelectorAll('.phone').forEach(update)}
+function renderMain(){
+  mount(document.getElementById('main-phone'),phone(state.c));
+  const C=CASES[state.c];
+  document.getElementById('note').textContent=C.note;
+  document.getElementById('cap').textContent=C.name;
+  document.querySelectorAll('#picks button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.case===state.c)));
+}
+function setView(v){
+  state.view=v;
+  document.getElementById('view-proto').hidden=v!=='proto';
+  document.getElementById('view-compare').hidden=v!=='compare';
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+  if(v==='compare')mount(document.getElementById('cmp'),Object.entries(CASES).map(([k,C])=>`<div class="cell"><h2>${C.name}</h2>${phone(k)}<button type="button" data-open="${k}">크게 보기</button></div>`).join(''));
+  try{history.replaceState(null,'','#'+v)}catch(e){}
+}
+document.getElementById('picks').innerHTML=Object.entries(CASES).map(([k,C])=>`<button type="button" data-case="${k}"><span>${C.name}<small>${C.short}</small></span><i></i></button>`).join('');
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.view)setView(t.dataset.view);
+  else if(t.dataset.case){state.c=t.dataset.case;renderMain()}
+  else if(t.dataset.tab!==undefined){const p=t.closest('.phone');if(p.dataset.tab!==t.dataset.tab){p.dataset.tab=t.dataset.tab;update(p)}}
+  else if(t.dataset.open){state.c=t.dataset.open;renderMain();setView('proto');window.scrollTo(0,0)}
+});
+renderMain();
+setView((location.hash||'').slice(1)==='compare'?'compare':'proto');
+window.addEventListener('hashchange',()=>{const x=location.hash.slice(1);if(x==='compare'||x==='proto')setView(x)});
+})();
+</script>
+
+</body>
+</html>

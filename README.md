@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- v8 프로토타입(최신, v7 링크에 덮어씀): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- v9 프로토타입(최신, v7 링크에 덮어씀): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -19,6 +19,7 @@
 | `v6_케이스3종/` | 관리비 케이스 3종: 50만 원 미만 / 이번 달 데이터 없음 / 50만 원 이상 |
 | `v7_케이스3종_v5기반/` | v5 시안 3종 × 케이스 3가지. 데이터 없음은 '집계 전' + '50만 원이라면' 기본 선택, 50만 원 이상은 '더 쓸 금액 0원' + 두 번째 탭 '100만 원 채우면' |
 | `v8_도넛형케이스3종/` | 도넛형만 유지. 데이터 없음은 전월(10월) 관리비로 계산, 50만 원 이상은 탭 없이 '추가 사용 없이 월 6,000원 할인' |
+| `v9_도넛형리디자인_케이스4종/` | 도넛형 리디자인(링 애니메이션·숫자 카운트업·체크 전환). 케이스 4종: 50만 원 미만 / 이번 달 없음(10월 기준) / 50만 원 이상(탭 없음) / 관리비 데이터 없음(50만 원 예시) |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

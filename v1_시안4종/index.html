@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="../assets/pretendard.css">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>관리비 실적계산기 KV 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: review tool — 시안·관리비 선택 패널 왼쪽, 실제 크기 폰 가운데 / 한눈에 비교는 폰 4대 나란히 */
+:root{
+  --bg:#F7F8F9; --panel:#FFFFFF; --line:#E1E4EB; --fg:#171719; --strong:#000000; --sub:#363C43; --muted:#8F99A9; --assist:#70737C;
+  --seg-bg:#F1F2F3; --seg-on:#363C43; --seg-on-fg:#FFFFFF;
+  --sel-bg:#F4F5F8; --sel-on-bg:#F1F5FF; --sel-on-line:#3C70FF; --sel-on-fg:#2761FF; --sel-icon:#CDD1D8;
+  --bezel:#1C1C1F;
+  /* 폰 안 화면은 실제 서비스 화면이라 테마와 무관하게 고정 */
+  --kv-bg:#0E1016; --kv-card:#1A1D26; --kv-line:#2A2E3A; --kv-fg:#FFFFFF; --kv-sub:#A9AFBD; --kv-soft:#C9CED9; --kv-accent:#FFC94D; --kv-ink:#111111;
+  --app-bg:#FFFFFF; --app-fg:#111111; --app-sub:#4A4F59; --app-box:#F3F5F8; --app-blue:#4A6CF7; --app-tag:#3F63E8;
+  --sans:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121316; --panel:#1C1C1F; --line:#2E3036; --fg:#F1F2F3; --strong:#FFFFFF; --sub:#CDD1D8; --muted:#8F99A9; --assist:#8F99A9;
+  --seg-bg:#2A2C31; --seg-on:#F1F2F3; --seg-on-fg:#1C1C1F;
+  --sel-bg:#24262B; --sel-on-bg:#1B2540; --sel-on-line:#4778FF; --sel-on-fg:#8FAEFF; --sel-icon:#4A4E57;
+  --bezel:#000000; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121316; --panel:#1C1C1F; --line:#2E3036; --fg:#F1F2F3; --strong:#FFFFFF; --sub:#CDD1D8; --muted:#8F99A9; --assist:#8F99A9;
+  --seg-bg:#2A2C31; --seg-on:#F1F2F3; --seg-on-fg:#1C1C1F;
+  --sel-bg:#24262B; --sel-on-bg:#1B2540; --sel-on-line:#4778FF; --sel-on-fg:#8FAEFF; --sel-icon:#4A4E57;
+  --bezel:#000000; color-scheme:dark}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--sans);font-size:14px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+button,input{font-family:var(--sans)}
+:focus-visible{outline:2px solid var(--sel-on-line);outline-offset:2px}
+
+.top{max-width:1240px;margin:0 auto 24px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.top h1{margin:0;font-size:24px;font-weight:700;line-height:1.35;color:var(--strong);text-wrap:balance}
+.top p{margin:4px 0 0;color:var(--assist);font-size:15px;font-weight:500}
+.eyebrow{font-size:13px;font-weight:600;color:var(--sel-on-fg);margin-bottom:6px}
+
+.seg{display:inline-flex;background:var(--seg-bg);border-radius:999px;padding:3px}
+.seg.fixed{display:flex;width:100%}
+.seg.fixed>*{flex:1 1 0}
+.seg>*{appearance:none;border:0;background:transparent;color:var(--muted);font:600 14px/1.45 var(--sans);padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
+.seg.lg>*{font-size:15px;padding:8px 18px}
+.seg>[aria-pressed="true"]{background:var(--seg-on);color:var(--seg-on-fg)}
+.seg>:not([aria-pressed="true"]):hover{color:var(--sub)}
+
+.sel{display:flex;flex-direction:column;gap:8px}
+.sel button{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;padding:12px 16px 12px 20px;border-radius:12px;border:1px solid transparent;background:var(--sel-bg);color:var(--sub);font:400 16px/1.45 var(--sans);text-align:left;cursor:pointer}
+.sel button small{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-top:1px}
+.sel button i{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--sel-icon);box-sizing:border-box;position:relative}
+.sel button[aria-pressed="true"]{background:var(--sel-on-bg);border-color:var(--sel-on-line);color:var(--sel-on-fg);font-weight:600}
+.sel button[aria-pressed="true"] small{color:var(--sel-on-fg);opacity:.75}
+.sel button[aria-pressed="true"] i{border:0;background:var(--sel-on-line)}
+.sel button[aria-pressed="true"] i::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--panel)}
+
+.proto{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:300px 1fr;gap:32px;align-items:start}
+.rail{background:var(--panel);border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;gap:24px;position:sticky;top:calc(24px + env(safe-area-inset-top,0px));box-shadow:0 1px 2px rgba(23,23,25,.04),0 8px 24px -12px rgba(23,23,25,.08)}
+.group{display:flex;flex-direction:column;gap:10px}
+.group h2{margin:0;font-size:15px;font-weight:600;color:var(--fg)}
+.group h2 span{font-size:13px;font-weight:500;color:var(--muted);margin-left:6px}
+.spec{border-top:1px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:12px}
+.spec h3{margin:0;font-size:15px;color:var(--fg);font-weight:600}
+.spec dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 12px;font-size:14px;color:var(--sub)}
+.spec dt{color:var(--muted);font-weight:500}.spec dd{margin:0;min-width:0}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.caption{font-size:14px;font-weight:500;color:var(--muted);text-align:center}.caption b{color:var(--fg);font-weight:600}
+
+.compare{max-width:1240px;margin:0 auto;overflow-x:auto;padding-bottom:12px}
+.row{display:flex;gap:24px;width:max-content;margin:0 auto;padding:4px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cell h2{margin:0;font-size:16px;font-weight:700;color:var(--strong)}
+.cell>button{appearance:none;border:0;background:var(--seg-bg);color:var(--sub);font:600 14px/1.45 var(--sans);padding:6px 14px;border-radius:999px;cursor:pointer}
+.cell>button:hover{background:var(--seg-on);color:var(--seg-on-fg)}
+.cmp-bar{max-width:1240px;margin:0 auto 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-weight:600;color:var(--sub)}
+
+/* ---------- phone ---------- */
+.phone{width:360px;height:740px;border:10px solid var(--bezel);border-radius:42px;box-sizing:content-box;overflow:hidden;position:relative;background:var(--app-bg);box-shadow:0 24px 60px -24px rgba(13,16,32,.45);flex:none}
+.compare .phone{transform:scale(.82);transform-origin:top center;margin-bottom:-133px;margin-inline:-32px}
+@media (max-width:860px){.proto{grid-template-columns:1fr}.rail{position:static}}
+@media (max-width:420px){.stage .phone{zoom:.86}}
+.ph-head{position:absolute;inset:0 0 auto;height:80px;z-index:5;background:var(--app-bg);color:var(--app-fg)}
+.ph-status{height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font:600 12px/1 var(--sans)}
+.ph-status span:last-child{display:flex;gap:4px;align-items:center}
+.ph-status i{display:block;background:var(--app-fg);border-radius:2px}
+.ph-nav-top{height:56px;display:flex;align-items:center;gap:8px;padding:0 12px;font:600 17px/1 var(--sans)}
+.ph-nav-top svg{width:24px;height:24px}
+.ph-scroll{position:absolute;top:80px;bottom:48px;left:0;right:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
+.ph-scroll::-webkit-scrollbar{display:none}
+.ph-cta{position:absolute;left:0;right:0;bottom:48px;z-index:6;padding:12px 20px 16px;background:linear-gradient(rgba(255,255,255,0),var(--app-bg) 30%)}
+.ph-cta button{width:100%;height:56px;border:0;border-radius:28px;background:var(--app-blue);color:#FFFFFF;font:700 17px/1 var(--sans);cursor:pointer}
+.ph-nav{position:absolute;inset:auto 0 0;height:48px;z-index:7;background:#f5f5f7 url(a/nav.png) no-repeat 0 0/360px 48px}
+
+/* ---------- KV (360×700, 실제 화면) ---------- */
+.kv{height:700px;box-sizing:border-box;background:var(--kv-bg);color:var(--kv-fg);font-variant-numeric:tabular-nums;padding:32px 20px 0;display:flex;flex-direction:column;gap:18px;font-family:var(--sans)}
+.kv-pill{align-self:flex-start;font-size:13px;font-weight:700;color:var(--kv-ink);background:var(--kv-accent);padding:6px 12px;border-radius:999px}
+.kv-h1{margin:0;font-size:24px;line-height:1.4;font-weight:700;letter-spacing:-.5px}
+.kv-h1 em{font-style:normal;color:var(--kv-accent)}
+.kv-card{background:var(--kv-card);border:1px solid var(--kv-line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.kv-res{background:var(--kv-bg);border-radius:12px;padding:14px 16px;font-size:17px;font-weight:700;line-height:1.45}
+.kv-res em{font-style:normal;color:var(--kv-accent)}
+.kv-chips{display:flex;flex-direction:column;gap:10px}
+.kv-chips>span{font-size:13px;color:var(--kv-sub)}
+.kv-chips>div{display:flex;gap:8px;flex-wrap:wrap}
+.kv-chip{height:36px;padding:0 13px;border-radius:999px;border:1px solid #3A3F4D;background:transparent;color:var(--kv-fg);font:500 13px/1 var(--sans);cursor:pointer;font-variant-numeric:tabular-nums}
+.kv-chip[aria-pressed="true"]{border-color:var(--kv-accent);background:var(--kv-accent);color:var(--kv-ink);font-weight:700}
+.kv-btnarea{margin-top:auto;height:110px;box-sizing:border-box;padding:15px 0 39px}
+.kv-cta{width:100%;height:56px;border:0;border-radius:28px;background:#FFFFFF;color:var(--kv-ink);font:700 17px/1 var(--sans);cursor:pointer}
+/* A */
+.g-bar{position:relative;height:18px;background:var(--kv-line);border-radius:9px;overflow:hidden}
+.g-bar>i{position:absolute;top:0;bottom:0;left:0}
+.g-fill{background:var(--kv-accent)}
+.g-gap,.g-sw2{background:repeating-linear-gradient(135deg,#5A5F70 0 4px,var(--kv-line) 4px 8px)}
+.g-tick{left:50%!important;width:2px;background:var(--kv-bg)}
+.g-lbl{position:relative;height:38px;font-size:12px;line-height:1.5;color:var(--kv-sub)}
+.g-lbl>div{position:absolute;top:0}
+.g-lbl b{color:var(--kv-fg)}
+.g-leg{display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--kv-soft);border-top:1px solid var(--kv-line);padding-top:12px}
+.g-leg>div{display:flex;justify-content:space-between}
+.g-leg span{display:flex;align-items:center;gap:8px}
+.g-leg b{color:var(--kv-fg)}
+.g-sw{width:10px;height:10px;border-radius:3px;background:var(--kv-accent)}
+.g-sw2{width:10px;height:10px;border-radius:3px}
+/* B */
+.rc{background:#FFFFFF;color:var(--kv-ink);border-radius:20px;padding:20px 20px 16px;display:flex;flex-direction:column;gap:12px}
+.rc-cap{font-size:13px;color:#5B6170;font-weight:500}
+.rc-row{display:flex;justify-content:space-between;align-items:center;font-size:16px}
+.rc-row b{font-size:18px}
+.rc-add{margin:0 -10px;padding:10px;border-radius:10px}
+.rc-add small{display:block;font-size:12px;color:#5B6170}
+.rc-div{border-top:2px dashed #D5D8DF}
+.rc-res{background:var(--kv-ink);color:#FFFFFF;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.rc-res span{font-size:14px;color:var(--kv-soft)}
+.rc-res b{font-size:19px;color:var(--kv-accent)}
+.rc-next{font-size:13px;color:#5B6170;text-align:center}
+/* C */
+.cp-strip{display:flex;justify-content:space-between;font-size:14px;color:var(--kv-soft);background:var(--kv-card);border-radius:12px;padding:12px 16px}
+.cp-strip b{color:var(--kv-fg)}
+.cp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cp-col{background:var(--kv-card);border:1px solid var(--kv-line);border-radius:16px;padding:16px 14px;display:flex;flex-direction:column;gap:8px}
+.cp-col span{font-size:13px;color:var(--kv-sub)}
+.cp-col small{font-size:12px;color:var(--kv-sub)}
+.cp-col b{font-size:21px;letter-spacing:-.5px;color:var(--kv-sub)}
+.cp-col.me{border:2px solid var(--kv-accent);padding:15px 13px}
+.cp-col.me span{color:var(--kv-accent);font-weight:700}
+.cp-col.me small{color:var(--kv-soft)}
+.cp-col.me b{color:var(--kv-fg)}
+.cp-punch{background:var(--kv-accent);color:var(--kv-ink);border-radius:14px;padding:16px;font-size:17px;font-weight:700;line-height:1.45;text-align:center}
+/* D */
+.sl-lab{font-size:13px;color:var(--kv-sub)}
+.sl-num{font-size:30px;font-weight:700;letter-spacing:-.5px}
+.sl-num small{font-size:18px;font-weight:500;margin-left:2px}
+.sl-range{width:100%;height:28px;margin:0;accent-color:var(--kv-accent);cursor:pointer}
+.sl-steps{display:flex;flex-direction:column;gap:8px}
+.sl-step{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:12px;border:1px solid var(--kv-line)}
+.sl-step.on{border-color:var(--kv-accent);background:#26231A}
+.sl-step>span{display:flex;flex-direction:column;gap:2px}
+.sl-step b{font-size:15px}
+.sl-step small{font-size:12px;color:var(--kv-sub)}
+.sl-st{font-size:13px;color:var(--kv-soft)}
+.sl-step.on .sl-st{font-weight:700;color:var(--kv-ink);background:var(--kv-accent);padding:6px 10px;border-radius:999px}
+/* 아래 이벤트 섹션 */
+.ev{padding:40px 20px 120px;color:var(--app-fg);display:flex;flex-direction:column;gap:12px;font-family:var(--sans)}
+.ev-tag{align-self:flex-start;font-size:13px;font-weight:700;color:#FFFFFF;background:var(--app-tag);padding:4px 10px;border-radius:999px}
+.ev h2{margin:0;font-size:24px;font-weight:700;letter-spacing:-.5px}
+.ev>p{margin:0;font-size:16px;line-height:1.6;color:var(--app-sub)}
+.ev-box{margin-top:12px;background:var(--app-box);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:20px}
+.ev-box h3{margin:0 0 6px;font-size:16px;font-weight:700}
+.ev-box p{margin:0;font-size:15px;line-height:1.5;color:var(--app-sub)}
+@media (prefers-reduced-motion:no-preference){.g-bar>i{transition:width .35s ease,left .35s ease}}
+</style>
+
+<header class="top">
+  <div>
+    <div class="eyebrow">롯데카드 · 아파트관리비 실적계산기</div>
+    <h1>KV 실적계산기 시안 4종</h1>
+    <p>관리비가 카드 실적에 포함된다는 걸 KV에서 바로 보여주는 방법을 비교해요.</p>
+  </div>
+  <div class="seg lg" role="group" aria-label="보기 방식">
+    <button type="button" id="tab-proto" data-view="proto" aria-pressed="true">프로토타입</button>
+    <button type="button" id="tab-compare" data-view="compare" aria-pressed="false">한눈에 비교</button>
+  </div>
+</header>
+
+<main id="view-proto" class="proto">
+  <aside class="rail">
+    <div class="group">
+      <h2>시안 <span>4종</span></h2>
+      <div class="sel" id="variant-sel"></div>
+    </div>
+    <div class="group">
+      <h2>11월 관리비 <span>예시 금액</span></h2>
+      <div class="seg fixed" id="fee-seg" role="group" aria-label="관리비 예시"></div>
+    </div>
+    <div class="spec">
+      <h3 id="spec-title"></h3>
+      <dl>
+        <dt>핵심 메시지</dt><dd id="spec-msg"></dd>
+        <dt>장점</dt><dd id="spec-pro"></dd>
+        <dt>고려할 점</dt><dd id="spec-con"></dd>
+      </dl>
+    </div>
+  </aside>
+  <section class="stage">
+    <div id="main-phone"></div>
+    <div class="caption"><b id="cap-name"></b> · KV 360×700 · 아래로 스크롤하면 캐시백 이벤트가 이어져요</div>
+  </section>
+</main>
+
+<main id="view-compare" hidden>
+  <div class="cmp-bar">11월 관리비 <div class="seg" id="fee-seg2" role="group" aria-label="관리비 예시"></div></div>
+  <div class="compare"><div class="row" id="cmp-row"></div></div>
+</main>
+
+<script>
+(function(){
+const fmt=n=>Math.round(n).toLocaleString('ko-KR');
+const PRESETS=[266880,520000,1030000];
+const V={
+  a:{name:'A. 게이지형',short:'얼마나 채웠는지 막대로',msg:'관리비만으로 실적 50만 원의 53%를 이미 채웠어요.',pro:'진척감이 바로 보이고 50만·100만 두 단계를 한 막대에 담아요.',con:'막대와 눈금을 읽는 데 시선이 한 번 더 가요.'},
+  b:{name:'B. 영수증형',short:'관리비 + 결제 = 실적',msg:'관리비 266,880원에 233,120원만 더하면 실적 50만 원이에요.',pro:'더하기 셈이 그대로 보여서 가장 빨리 이해돼요.',con:'다른 카드보다 유리하다는 점은 직접 드러나지 않아요.'},
+  c:{name:'C. 비교형',short:'관리비 제외 카드와 비교',msg:'관리비가 빠지는 카드는 50만 원, 이 카드는 233,120원만 쓰면 돼요.',pro:'관리비 실적 포함이라는 차별점을 가장 세게 보여줘요.',con:'다른 카드와 비교하는 표현은 심의 확인이 필요해요.'},
+  d:{name:'D. 슬라이더형',short:'우리 집 관리비 직접 넣기',msg:'내 관리비를 맞추면 두 단계 할인 달성 여부가 바로 보여요.',pro:'참여감이 크고 어떤 금액에도 결과를 보여줘요.',con:'KV 안에 조작 요소가 들어가 개발·QA 범위가 커요.'}
+};
+const state={variant:'b',fee:266880,view:'proto'};
+let uid=0;
+
+function st(f){return{s:f>=1e6?2:f>=5e5?1:0,r5:Math.max(0,5e5-f),r10:Math.max(0,1e6-f)}}
+function res(f){const {s,r5}=st(f);return [[fmt(r5)+'원만 더 쓰면','월 6,000원 할인'],['추가 결제 없이','월 6,000원 할인'],['추가 결제 없이','월 10,000원 할인 (최대)']][s]}
+const resHTML=f=>{const r=res(f);return `<div class="kv-res"><em>${r[0]}</em> ${r[1]}</div>`};
+
+const DYN={
+  a:{
+    head(f){const {s}=st(f);const pct=Math.min(100,Math.round(f/5000));
+      return `<h1 class="kv-h1">${s===0?`11월 관리비 ${fmt(f)}원으로<br>실적 50만 원의 <em>${pct}%</em>를 채웠어요`:`관리비만으로<br>실적 <em>${s===2?'100만':'50만'} 원</em> 달성했어요`}</h1>`},
+    gauge(f){const {s,r5,r10}=st(f);const fw=Math.min(100,f/1e4);const gw=(s===0?r5:s===1?r10:0)/1e4;
+      return `<div class="g-bar" aria-hidden="true"><i class="g-fill" style="width:${fw}%"></i><i class="g-gap" style="left:${fw}%;width:${gw}%"></i><i class="g-tick"></i></div>
+      <div class="g-lbl"><div style="left:50%;transform:translateX(-50%);text-align:center">50만<br><b>월 6,000원</b></div><div style="right:0;text-align:right">100만<br><b>월 10,000원</b></div></div>
+      <div class="g-leg"><div><span><i class="g-sw"></i>관리비 (자동 반영)</span><b>${fmt(f)}원</b></div>${s<2?`<div><span><i class="g-sw2"></i>${s===0?'50만까지':'100만까지'} 남은 금액</span><b>${fmt(s===0?r5:r10)}원</b></div>`:''}</div>
+      ${resHTML(f)}`}
+  },
+  b:{
+    receipt(f){const {s,r10}=st(f);
+      return `<div class="rc"><div class="rc-cap">11월 실적 계산</div>
+      <div class="rc-row"><span>관리비 자동납부</span><b>${fmt(f)}원</b></div>
+      <div class="rc-row rc-add" style="background:${s===0?'#FFF1C7':'#EEF0F4'}"><span>+ 다른 카드 결제<small>${s===0?'이만큼만 더 쓰면 돼요':'추가 결제 필요 없어요'}</small></span><b>${fmt(s===0?st(f).r5:0)}원</b></div>
+      <div class="rc-div"></div>
+      <div class="rc-row"><span>= 실적</span><b>${fmt(s===0?5e5:f)}원</b></div>
+      <div class="rc-res"><span>${s===2?'실적 100만 원 달성':'실적 50만 원 달성'}</span><b>${s===2?'월 10,000원 할인':'월 6,000원 할인'}</b></div>
+      ${s===1?`<div class="rc-next">${fmt(r10)}원 더 쓰면 월 10,000원으로 올라가요</div>`:''}</div>`}
+  },
+  c:{
+    body(f){const {s}=st(f);const t=s===2?1e6:5e5;const mine=Math.max(0,t-f);const disc=s===2?'월 10,000원':'월 6,000원';
+      return `<div class="cp-strip"><span>관리비 <b>${fmt(f)}원</b> 기준</span><span>목표 <b>${disc} 할인</b></span></div>
+      <div class="cp-grid"><div class="cp-col"><span>관리비 실적 제외 카드</span><small>따로 써야 하는 금액</small><b>${fmt(t)}원</b></div>
+      <div class="cp-col me"><span>이 카드</span><small>따로 써야 하는 금액</small><b>${fmt(mine)}원</b></div></div>
+      <div class="cp-punch">${mine>0?`${fmt(mine)}원만 더 쓰면 ${disc} 할인`:`관리비만 내도 ${disc} 할인`}</div>`}
+  },
+  d:{
+    num(f){return `<div class="sl-num">${fmt(f)}<small>원</small></div>`},
+    steps(f){const {r5,r10}=st(f);
+      const step=(d,t,l)=>`<div class="sl-step${l===0?' on':''}"><span><b>${d}</b><small>${t}</small></span><span class="sl-st">${l===0?'관리비로 달성':fmt(l)+'원 더'}</span></div>`;
+      return `<div class="sl-steps">${step('월 6,000원 할인','실적 50만 원 이상',r5)}${step('월 10,000원 할인','실적 100만 원 이상',r10)}</div>${resHTML(f)}`}
+  }
+};
+
+const pill='<span class="kv-pill">관리비도 카드 실적으로 인정</span>';
+const chips=()=>`<div class="kv-chips"><span>다른 관리비로 계산해보기</span><div>${PRESETS.map(v=>`<button type="button" class="kv-chip" data-fee="${v}">${fmt(v)}원</button>`).join('')}</div></div>`;
+const btn='<div class="kv-btnarea"><button type="button" class="kv-cta">카드 혜택 보기</button></div>';
+function kvShell(v){
+  if(v==='a')return pill+'<div data-dyn="head"></div><div class="kv-card" data-dyn="gauge"></div>'+chips()+btn;
+  if(v==='b')return pill+'<h1 class="kv-h1">관리비 + 카드 사용,<br>합쳐서 실적이에요</h1><div data-dyn="receipt"></div>'+chips()+btn;
+  if(v==='c')return pill+'<h1 class="kv-h1">관리비가 실적에 들어가면<br>할인이 훨씬 가까워요</h1><div style="display:flex;flex-direction:column;gap:12px" data-dyn="body"></div>'+chips()+btn;
+  const id='fee-range-'+(++uid);
+  return pill+`<h1 class="kv-h1">우리 집 관리비로<br>얼마나 할인될까요?</h1><div class="kv-card"><label class="sl-lab" for="${id}">11월 관리비</label><div data-dyn="num"></div><input class="sl-range" id="${id}" type="range" min="0" max="1200000" step="10"><div style="display:flex;flex-direction:column;gap:14px" data-dyn="steps"></div></div>`+btn;
+}
+const EVENT=`<section class="ev"><span class="ev-tag">Event</span><h2>최대 15만원 캐시백</h2><p>아파트관리비 자동납부 신청하고<br>15만원 이상 이용 시</p>
+<div class="ev-box"><div><h3>행사 기간</h3><p>26.11.01(일) ~ 26.11.30(월)</p></div><div><h3>대상</h3><p>직전 6개월 간(26.05.01~26.10.31) 모든 롯데 개인 신용카드 이용 이력이 없는 고객</p></div><div><h3>내용</h3><p>2026년 11월 10일(화)까지 대상 카드로 아파트 관리비 자동납부 신청하고 15만원 이상 이용 시 15만원 캐시백 지급 (아파트관리비 매출은 이용금액에서 제외됩니다.)</p></div></div></section>`;
+const HEAD=`<div class="ph-head"><div class="ph-status"><span>12:30</span><span><i style="width:14px;height:9px"></i><i style="width:18px;height:9px"></i></span></div><div class="ph-nav-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>카드 혜택</div></div>`;
+function phone(v){return `<div class="phone" data-variant="${v}">${HEAD}<div class="ph-scroll"><div class="kv">${kvShell(v)}</div>${EVENT}</div><div class="ph-cta"><button type="button">카드 보기</button></div><div class="ph-nav" aria-hidden="true"></div></div>`}
+
+function update(skip){
+  document.querySelectorAll('.phone').forEach(p=>{
+    const v=p.dataset.variant;
+    p.querySelectorAll('[data-dyn]').forEach(el=>{el.innerHTML=DYN[v][el.dataset.dyn](state.fee)});
+    p.querySelectorAll('.kv-chip').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.fee===state.fee)));
+    p.querySelectorAll('.sl-range').forEach(r=>{if(r!==skip)r.value=state.fee});
+  });
+  document.querySelectorAll('#fee-seg>button,#fee-seg2>button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.fee===state.fee)));
+}
+function renderMain(){
+  const host=document.getElementById('main-phone');host.innerHTML=phone(state.variant);
+  const m=V[state.variant];
+  document.getElementById('spec-title').textContent=m.name;
+  document.getElementById('spec-msg').textContent=m.msg;
+  document.getElementById('spec-pro').textContent=m.pro;
+  document.getElementById('spec-con').textContent=m.con;
+  document.getElementById('cap-name').textContent=m.name;
+  document.querySelectorAll('#variant-sel>button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===state.variant)));
+  update();
+}
+function setView(v){
+  state.view=v;
+  document.getElementById('view-proto').hidden=v!=='proto';
+  document.getElementById('view-compare').hidden=v!=='compare';
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+  try{history.replaceState(null,'','#'+v)}catch(e){}
+}
+
+document.getElementById('variant-sel').innerHTML=Object.entries(V).map(([k,m])=>`<button type="button" data-v="${k}"><span>${m.name}<small>${m.short}</small></span><i></i></button>`).join('');
+const segHTML=PRESETS.map(v=>`<button type="button" data-fee="${v}">${fmt(v)}</button>`).join('');
+document.getElementById('fee-seg').innerHTML=segHTML;
+document.getElementById('fee-seg2').innerHTML=segHTML;
+document.getElementById('cmp-row').innerHTML=Object.entries(V).map(([k,m])=>`<div class="cell"><h2>${m.name}</h2>${phone(k)}<button type="button" data-open="${k}">이 시안 크게 보기</button></div>`).join('');
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.view)setView(t.dataset.view);
+  else if(t.dataset.v){state.variant=t.dataset.v;renderMain()}
+  else if(t.dataset.fee){state.fee=+t.dataset.fee;update()}
+  else if(t.dataset.open){state.variant=t.dataset.open;renderMain();setView('proto');window.scrollTo(0,0)}
+});
+document.addEventListener('input',e=>{
+  if(e.target.classList.contains('sl-range')){state.fee=+e.target.value;update(e.target)}
+});
+renderMain();
+const h=(location.hash||'').slice(1);
+setView(h==='compare'?'compare':'proto');
+window.addEventListener('hashchange',()=>{const x=location.hash.slice(1);if(x==='compare'||x==='proto')setView(x)});
+})();
+</script>
+
+</body>
+</html>

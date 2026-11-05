@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="../assets/pretendard.css">
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>관리비 실적계산기 KV</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 리뷰 셸(왼쪽 시안·케이스 선택 · 가운데 실제 크기 폰) + 한눈에 비교(같은 케이스, 시안 2종). 폰 안은 서비스 화면이라 테마 고정 */
+:root{
+  --bg:#F2F4F6; --panel:#FFFFFF; --line:#E5E8EB; --fg:#191F28; --sub:#4E5968; --muted:#8B95A1;
+  --pick-bg:#F2F4F6; --pick-on-bg:#E8F3FF; --pick-on-line:#3182F6; --pick-on-fg:#1B64DA;
+  --seg-bg:#E5E8EB; --seg-on:#FFFFFF; --seg-on-fg:#191F28; --bezel:#191F28;
+  /* 폰 안: 토스 스타일 팔레트 */
+  --t-blue:#3182F6; --t-blue-600:#2272EB; --t-blue-700:#1B64DA; --t-blue-50:#E8F3FF;
+  --t-g50:#F9FAFB; --t-g100:#F2F4F6; --t-g200:#E5E8EB; --t-g400:#B0B8C1; --t-g500:#8B95A1; --t-g600:#6B7684; --t-g700:#4E5968; --t-g900:#191F28;
+  --d-bg:#17171C; --d-card:#202027; --d-line:#2C2C35; --d-fg:#FFFFFF; --d-2:#C3C3C6; --d-3:#9E9EA4; --d-blue:#4C93FF;
+  --sans:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101115; --panel:#1B1D22; --line:#2C2F36; --fg:#F2F4F6; --sub:#C3C9D2; --muted:#8B95A1;
+  --pick-bg:#24262C; --pick-on-bg:#162843; --pick-on-line:#4C93FF; --pick-on-fg:#90C2FF;
+  --seg-bg:#2C2F36; --seg-on:#F2F4F6; --seg-on-fg:#191F28; --bezel:#000000; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101115; --panel:#1B1D22; --line:#2C2F36; --fg:#F2F4F6; --sub:#C3C9D2; --muted:#8B95A1;
+  --pick-bg:#24262C; --pick-on-bg:#162843; --pick-on-line:#4C93FF; --pick-on-fg:#90C2FF;
+  --seg-bg:#2C2F36; --seg-on:#F2F4F6; --seg-on-fg:#191F28; --bezel:#000000; color-scheme:dark}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--sans);font-size:14px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px;-webkit-font-smoothing:antialiased}
+button{font-family:var(--sans)}
+:focus-visible{outline:2px solid var(--pick-on-line);outline-offset:2px}
+
+/* ---------- 리뷰 셸 ---------- */
+.top{max-width:1200px;margin:0 auto 28px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.top small{display:block;font-size:13px;font-weight:600;color:var(--pick-on-fg);margin-bottom:4px}
+.top h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.4px;text-wrap:balance}
+.vseg{display:inline-flex;background:var(--seg-bg);border-radius:99px;padding:3px;flex-wrap:wrap}
+.vseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 14px/1 var(--sans);height:36px;padding:0 16px;border-radius:99px;cursor:pointer;white-space:nowrap}
+.vseg button[aria-pressed="true"]{background:var(--seg-on);color:var(--seg-on-fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.proto{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:280px minmax(0,1fr);gap:40px;align-items:start}
+.rail{background:var(--panel);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:22px;position:sticky;top:calc(24px + env(safe-area-inset-top,0px))}
+.rail h2{margin:0 0 10px;font-size:15px;font-weight:600}
+.picks{display:flex;flex-direction:column;gap:8px}
+.picks button{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;border-radius:14px;border:1px solid transparent;background:var(--pick-bg);color:var(--sub);font:600 15px/1.4 var(--sans);text-align:left;cursor:pointer}
+.picks small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.picks i{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--line);box-sizing:border-box;position:relative}
+.picks button[aria-pressed="true"]{background:var(--pick-on-bg);border-color:var(--pick-on-line);color:var(--pick-on-fg)}
+.picks button[aria-pressed="true"] small{color:var(--pick-on-fg);opacity:.75}
+.picks button[aria-pressed="true"] i{border:0;background:var(--pick-on-line)}
+.picks button[aria-pressed="true"] i::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--panel)}
+.picks.cases button{padding:11px 16px}
+.note{border-top:1px solid var(--line);padding-top:16px;font-size:14px;color:var(--sub);display:flex;flex-direction:column;gap:6px}
+.note b{font-size:13px;font-weight:600;color:var(--muted)}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.cap{font-size:14px;font-weight:500;color:var(--muted);text-align:center}.cap b{color:var(--fg);font-weight:600}
+.cmp-bar{max-width:1200px;margin:0 auto 18px;display:flex;justify-content:center}
+.compare{max-width:1200px;margin:0 auto;overflow-x:auto;padding-bottom:8px}
+.row{display:flex;gap:8px;width:max-content;margin:0 auto}
+.cell{display:flex;flex-direction:column;align-items:center;gap:12px}
+.cell h2{margin:0;font-size:16px;font-weight:700}
+.cell>button{appearance:none;border:0;background:var(--seg-bg);color:var(--sub);font:600 14px/1 var(--sans);height:36px;padding:0 16px;border-radius:99px;cursor:pointer}
+@media (max-width:860px){.proto{grid-template-columns:1fr}.rail{position:static}}
+
+/* ---------- 폰 ---------- */
+.phone{width:360px;height:740px;border:10px solid var(--bezel);border-radius:44px;box-sizing:content-box;overflow:hidden;position:relative;background:#FFFFFF;box-shadow:0 30px 60px -30px rgba(13,16,32,.5);flex:none}
+.compare .phone{transform:scale(.84);transform-origin:top center;margin:0 -29px -118px}
+@media (max-width:420px){.stage .phone{zoom:.86}}
+.ph-head{position:absolute;inset:0 0 auto;height:80px;z-index:5;background:#FFFFFF;color:var(--t-g900)}
+.ph-status{height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:600 12px/1 var(--sans)}
+.ph-status span:last-child{display:flex;gap:4px}
+.ph-status i{display:block;height:9px;background:currentColor;border-radius:2px}
+.ph-nav-top{height:56px;box-sizing:border-box;display:grid;grid-template-columns:24px 1fr 24px;gap:8px;align-items:center;padding:0 20px 0 12px;font:600 16px/1 var(--sans);text-align:center}
+.ph-nav-top svg{width:24px;height:24px}
+.phone.dark .ph-head{background:var(--d-bg);color:var(--d-fg)}
+.ph-scroll{position:absolute;top:80px;bottom:48px;left:0;right:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
+.ph-scroll::-webkit-scrollbar{display:none}
+.ph-cta{position:absolute;left:0;right:0;bottom:48px;z-index:6;padding:16px 20px;background:linear-gradient(rgba(255,255,255,0),#FFFFFF 28%)}
+.ph-cta button{width:100%;height:56px;border:0;border-radius:16px;background:var(--t-blue);color:#FFFFFF;font:600 17px/1 var(--sans);cursor:pointer}
+.ph-nav{position:absolute;inset:auto 0 0;height:48px;z-index:7;background:#f5f5f7 url(a/nav.png) no-repeat 0 0/360px 48px}
+
+/* ---------- KV 360×700 · 공통 ---------- */
+.kv{position:relative;height:700px;box-sizing:border-box;padding:28px 24px 28px;display:flex;flex-direction:column;font-variant-numeric:tabular-nums;background:#FFFFFF;color:var(--t-g900)}
+.kv-eyebrow{display:flex;align-items:center;gap:6px;min-height:20px;margin:0;font-size:14px;font-weight:500;color:var(--t-g600)}
+.kv-title{margin:6px 0 0;font-size:26px;line-height:1.36;font-weight:700;letter-spacing:-.7px}
+.kv-title em{font-style:normal;background:linear-gradient(100deg,#3C70FF 0%,#4F86FF 30%,#8C72FF 68%,#E05FB8 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kv-seg{position:relative;display:grid;grid-template-columns:1fr 1fr;width:100%;height:44px;margin-top:20px;padding:3px;box-sizing:border-box;border-radius:12px;background:var(--t-g100)}
+.kv-seg[hidden]{display:none}
+.kv-seg::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:9px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:transform .32s cubic-bezier(.3,.9,.3,1)}
+.kv-seg[data-tab="1"]::before{transform:translateX(100%)}
+.kv-seg button{position:relative;z-index:1;appearance:none;border:0;background:transparent;color:var(--t-g500);font:500 15px/1 var(--sans);cursor:pointer;transition:color .2s}
+.kv-seg button[aria-pressed="true"]{color:var(--t-g900);font-weight:600}
+.m-label{display:flex;align-items:center;gap:6px;margin:0;font-size:15px;font-weight:500;color:var(--t-g700)}
+.m-label b{font-weight:600;color:var(--t-g900)}
+.tag{font-size:12px;font-weight:600;line-height:1;color:var(--t-blue-700);padding:5px 7px;border-radius:6px;background:var(--t-blue-50)}
+.ring{position:relative;width:176px;height:176px;flex:none}
+.ring>svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--t-g200)}
+.ring .prog{stroke:url(#spec);transition:stroke-dashoffset .9s cubic-bezier(.22,1,.36,1)}
+.ring .dots{stroke:var(--t-g200)}
+.ring .knob{transform-origin:88px 88px;transition:transform .9s cubic-bezier(.22,1,.36,1),opacity .2s}
+.ring.done .knob{opacity:0}
+.ring .shine{stroke:#FFFFFF;opacity:0;stroke-dasharray:44 459}
+.ring.shine-on .shine{animation:shine 1.3s .55s cubic-bezier(.45,0,.2,1) 1}
+@keyframes shine{0%{stroke-dashoffset:0;opacity:0}15%{opacity:.85}85%{opacity:.85}100%{stroke-dashoffset:-503;opacity:0}}
+.ic{display:inline-block;flex:none;width:22px;height:22px;vertical-align:-5px}
+.r-center{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.r-center>div{grid-area:1/1;display:flex;flex-direction:column;align-items:center;transition:opacity .25s,transform .35s cubic-bezier(.3,.9,.3,1)}
+.r-big{font-size:46px;font-weight:700;letter-spacing:-1.6px;line-height:1}
+.r-big small{font-size:24px;letter-spacing:-.4px;margin-left:1px}
+.r-sub{margin-top:6px;font-size:13px;font-weight:500;color:var(--t-g500)}
+.r-ok svg{width:56px;height:56px;transform:scale(.6);transition:transform .5s .25s cubic-bezier(.3,1.6,.5,1)}
+.ring.done .r-ok svg{transform:scale(1)}
+.r-ok path{stroke-dasharray:36;stroke-dashoffset:36;transition:stroke-dashoffset .4s .5s ease-out}
+.ring:not(.done) .r-ok,.ring.done .r-num{opacity:0;transform:scale(.92);pointer-events:none}
+.ring.done .r-ok path{stroke-dashoffset:0}
+.res{margin:0;font-size:20px;line-height:1.42;font-weight:600;letter-spacing:-.4px}
+.res em{font-style:normal;font-weight:700;color:var(--t-blue)}
+.fine{margin:auto 0 0;font-size:12px;line-height:1.5;color:var(--t-g400)}
+@media (prefers-reduced-motion:reduce){.kv-seg::before,.ring .prog,.ring .knob,.r-center>div,.r-ok path,.r-ok svg{transition:none}.ring.shine-on .shine{animation:none}}
+
+/* A · 라이트 카드형 */
+.kv-a .card{margin-top:16px;background:var(--t-g50);border-radius:24px;padding:22px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.kv-a .ring{width:160px;height:160px}
+.kv-a .r-big{font-size:42px}
+.kv-a .kv-seg[hidden]+.card{margin-top:24px}
+
+/* B · 라이트 답 먼저 + 말풍선 */
+.kv-b .card{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.kv-b .ring{width:196px;height:196px}
+.kv-b .r-big{font-size:28px;letter-spacing:-.8px}
+.kv-b .r-num .ic{width:26px;height:26px;margin-bottom:6px}
+.res .ic{margin-right:3px}
+.kv-b .r-big small{font-size:28px}
+.kv-b .r-sub{font-size:14px}
+.kv-b .kv-seg[hidden]+.card{margin-top:28px}
+.bubble{position:relative;display:flex;align-items:center;gap:6px;margin:0;padding:11px 16px 11px 12px;border-radius:14px;background:var(--t-blue-50);color:var(--t-blue-700);font-size:15px;white-space:nowrap;font-weight:600;line-height:1.4;letter-spacing:-.3px;text-align:center}
+.bubble::before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;background:inherit;transform:rotate(45deg);border-radius:2px}
+.bubble b{font-weight:700}
+
+/* C · 다크 가로형 */
+.kv-c{background:var(--d-bg);color:var(--d-fg)}
+.kv-c .kv-eyebrow{color:var(--d-3)}
+.kv-c .kv-title em{color:var(--d-blue)}
+.kv-c .kv-seg{background:var(--d-card)}
+.kv-c .kv-seg::before{background:#3A3A45;box-shadow:none}
+.kv-c .kv-seg button{color:var(--d-3)}
+.kv-c .kv-seg button[aria-pressed="true"]{color:var(--d-fg)}
+.kv-c .m-label{margin-top:28px;color:var(--d-2)}
+.kv-c .kv-seg[hidden]+.m-label{margin-top:36px}
+.kv-c .m-label b{color:var(--d-fg)}
+.kv-c .tag{color:#90C2FF;background:rgba(76,147,255,.16)}
+.kv-c .card{margin-top:12px;background:var(--d-card);border-radius:24px;padding:20px;display:flex;align-items:center;gap:18px}
+.kv-c .ring{width:120px;height:120px}
+.kv-c .ring .track{stroke:var(--d-line)}
+.kv-c .ring .prog{stroke:var(--d-blue)}
+.kv-c .r-big{font-size:30px;letter-spacing:-1px}
+.kv-c .r-big small{font-size:17px}
+.kv-c .r-ok svg{width:36px;height:36px;color:var(--d-blue)}
+.kv-c .r-sub{display:none}
+.side{display:flex;flex-direction:column;gap:4px;min-width:0}
+.side>span{font-size:14px;font-weight:500;color:var(--d-3)}
+.side b{font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.3}
+.side small{font-size:14px;font-weight:500;color:var(--d-2)}
+.side small em{font-style:normal;font-weight:600;color:#90C2FF}
+.kv-c .fine{color:#5E5E66}
+
+/* ---------- 아래 이벤트 섹션 ---------- */
+.ev{padding:40px 24px 120px;color:var(--t-g900);display:flex;flex-direction:column;gap:10px;background:#FFFFFF}
+.ev-tag{align-self:flex-start;font-size:12px;font-weight:600;line-height:1;color:var(--t-blue-700);background:var(--t-blue-50);padding:6px 8px;border-radius:6px}
+.ev h2{margin:4px 0 0;font-size:24px;font-weight:700;letter-spacing:-.5px}
+.ev>p{margin:0;font-size:16px;line-height:1.6;color:var(--t-g700)}
+.ev-box{margin-top:14px;background:var(--t-g50);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:18px}
+.ev-box h3{margin:0 0 4px;font-size:15px;font-weight:600}
+.ev-box p{margin:0;font-size:15px;line-height:1.55;color:var(--t-g700)}
+.ev-line{height:12px;background:var(--t-g100);margin:0 -24px 30px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="spec" gradientUnits="userSpaceOnUse" x1="176" y1="30" x2="0" y2="146"><stop offset="0" stop-color="#3C70FF"/><stop offset=".42" stop-color="#4F8BFF"/><stop offset=".42" stop-color="#43C0FF"/><stop offset=".6" stop-color="#7FB2FF"/><stop offset=".6" stop-color="#8E9BFF"/><stop offset=".82" stop-color="#B98AFF"/><stop offset=".82" stop-color="#E77BC6"/><stop offset="1" stop-color="#FF9BBD"/></linearGradient>
+  <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3C70FF"/><stop offset=".5" stop-color="#43A6FF"/><stop offset=".5" stop-color="#6CC7FC"/><stop offset=".78" stop-color="#9B8CFF"/><stop offset="1" stop-color="#C98BFF"/></linearGradient>
+  <linearGradient id="roof" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6FA4FF"/><stop offset=".55" stop-color="#3C70FF"/><stop offset=".55" stop-color="#316CD2"/><stop offset="1" stop-color="#3C70FF"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4E3FF"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFEC68"/><stop offset=".48" stop-color="#FFD23F"/><stop offset=".48" stop-color="#FFC21F"/><stop offset="1" stop-color="#FFB108"/></linearGradient>
+</defs></svg>
+<header class="top">
+  <div><small>아파트아이 × 디지로카 · 관리비 실적계산기</small><h1>KV 토스 스타일 시안 2종 · 그래프·아이콘 강화</h1></div>
+  <div class="vseg" role="group" aria-label="보기 방식">
+    <button type="button" data-view="proto" aria-pressed="true">프로토타입</button>
+    <button type="button" data-view="compare" aria-pressed="false">한눈에 비교</button>
+  </div>
+</header>
+
+<main id="view-proto" class="proto">
+  <aside class="rail">
+    <div><h2>시안</h2><div class="picks" id="vpicks"></div></div>
+    <div><h2>관리비 케이스</h2><div class="picks cases" id="cpicks"></div></div>
+    <div class="note"><b>이 시안의 포인트</b><span id="note"></span></div>
+  </aside>
+  <section class="stage">
+    <div id="main-phone"></div>
+    <div class="cap"><b id="cap"></b> · 폰 안 탭을 눌러보세요</div>
+  </section>
+</main>
+<main id="view-compare" hidden>
+  <div class="cmp-bar"><div class="vseg" id="cseg" role="group" aria-label="관리비 케이스"></div></div>
+  <div class="compare"><div class="row" id="cmp"></div></div>
+</main>
+
+<script>
+(function(){
+const fmt=n=>Math.round(n).toLocaleString('ko-KR');
+const NAME='홍길동';
+const GOAL=5e5, R=80, CIRC=2*Math.PI*R;
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const V={
+  b:{name:'B. 답이 먼저',short:'제목이 곧 결과, 말풍선 팁',dark:false,
+    note:'제목 자체가 답이에요(“실적 53% 채웠어요”). 링 가운데는 금액, 할인 조건은 토스식 파란 말풍선 한 줄로만 보여줘요. 읽을 게 가장 적어요.'},
+  a:{name:'A. 라이트 카드형',short:'회색 카드 안에 도넛과 결과',dark:false,
+    note:'토스 홈의 카드처럼 회색 면 하나에 결과를 모았어요. 질문은 왼쪽 정렬 큰 제목, 답은 카드 안 가운데. 가장 무난하고 안정적이에요.'}
+};
+const CASES={
+  under:{name:'50만 원 미만',short:'11월 관리비 266,880원',month:'11월',fee:266880,tabs:['내 관리비','50만 원이라면']},
+  nodata:{name:'이번 달 데이터 없음',short:'10월 관리비 248,500원',month:'10월',fee:248500,tabs:['10월 관리비','50만 원이라면'],tag:'11월 집계 전'},
+  over:{name:'50만 원 이상',short:'11월 관리비 523,000원',month:'11월',fee:523000,tabs:null},
+  none:{name:'관리비 데이터 없음',short:'지난달 · 이번 달 모두 없음',fee:null,tabs:null,hypOnly:true}
+};
+const state={v:'b',c:'under',view:'proto'};
+let uid=0;
+
+function model(c,tab){
+  const C=CASES[c],hyp=!!C.hypOnly||(!!C.tabs&&tab===1),f=hyp?GOAL:C.fee,done=f>=GOAL;
+  return{C,hyp,done,left:Math.max(0,GOAL-f),pct:Math.min(100,Math.round(f/GOAL*100))};
+}
+const titleQ=C=>C.hypOnly?`${NAME}님, 관리비로도<br><em>카드 실적</em>을 채울 수 있어요`:`${NAME}님의 관리비로<br><em>카드 실적</em> 얼마나 채울까요?`;
+const labelHTML=m=>m.hyp?`${HOUSE}<span>관리비가 <b>50만 원</b>이라면</span>${m.C.hypOnly?'<span class="tag">예시</span>':''}`
+  :`${HOUSE}<span>${m.C.month} 관리비 <b>${fmt(m.C.fee)}원</b></span>${m.C.tag?`<span class="tag">${m.C.tag}</span>`:''}`;
+
+const HEAD=`<div class="ph-head"><div class="ph-status"><span>12:30</span><span><i style="width:15px"></i><i style="width:20px"></i></span></div><div class="ph-nav-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>매달 든든한 관리비 혜택</span><span></span></div></div>`;
+const EVENT=`<section class="ev"><span class="ev-tag">이벤트</span><h2>최대 15만원 캐시백</h2><p>아파트관리비 자동납부 신청하고<br>15만원 이상 이용 시</p><div class="ev-box"><div><h3>행사 기간</h3><p>26.11.01(일) ~ 26.11.30(월)</p></div><div><h3>대상</h3><p>직전 6개월 간(26.05.01~26.10.31) 모든 롯데 개인 신용카드 이용 이력이 없는 고객</p></div><div><h3>내용</h3><p>2026년 11월 10일(화)까지 대상 카드로 아파트 관리비 자동납부 신청하고 15만원 이상 이용 시 15만원 캐시백 지급 (아파트관리비 매출은 이용금액에서 제외됩니다.)</p></div></div></section>`;
+const HOUSE='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11.2V20h14v-8.8" fill="url(#wall)" stroke="#121212" stroke-width=".9" stroke-linejoin="round"/><path d="M2.6 12 12 4l9.4 8-1.4 1.6L12 6.8 4 13.6z" fill="url(#roof)" stroke="#121212" stroke-width=".9" stroke-linejoin="round"/><path d="M10 20v-4.6a2 2 0 0 1 4 0V20" fill="#FFB66B" stroke="#121212" stroke-width=".9" stroke-linejoin="round"/><path d="M15.6 4.6h2.2v3.6l-2.2-1.9z" fill="#2A2F3D" stroke="#121212" stroke-width=".9" stroke-linejoin="round"/></svg>';
+const COIN='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.6" fill="url(#gold)" stroke="#121212" stroke-width=".9"/><circle cx="12" cy="12" r="7" fill="none" stroke="#E39A00" stroke-width="1"/><path d="M6.4 9.2a7 7 0 0 1 4-3.9l-.5 1.3a5.6 5.6 0 0 0-2.4 2.4z" fill="#FFFFFF" opacity=".85"/><circle cx="9.6" cy="9.6" r="1.35" fill="none" stroke="#B87400" stroke-width="1.2"/><circle cx="14.4" cy="14.4" r="1.35" fill="none" stroke="#B87400" stroke-width="1.2"/><path d="M15 8.6 9 15.4" stroke="#B87400" stroke-width="1.3" stroke-linecap="round"/></svg>';
+const CHECK='<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="28" fill="url(#badge)"/><path d="M32 6.5a22 22 0 0 1 17 15l-4 1a18 18 0 0 0-13.8-12.3z" fill="#FFFFFF" opacity=".35"/><path d="M17.5 28.5l7 7 14-15" fill="none" stroke="#FFFFFF" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function ringHTML(){
+  return `<div class="ring" role="img"><svg viewBox="0 0 176 176" aria-hidden="true">
+    <circle class="track" cx="88" cy="88" r="${R}" fill="none" stroke-width="12"/>
+    <circle class="dots" cx="88" cy="88" r="64" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="0 8.38"/>
+    <circle class="prog" cx="88" cy="88" r="${R}" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}"/>
+    <circle class="shine" cx="88" cy="88" r="${R}" fill="none" stroke-width="5" stroke-linecap="round"/>
+    <g class="knob"><circle cx="168" cy="88" r="8.5" fill="#FFFFFF" stroke="#3C70FF" stroke-width="3.5"/></g></svg>
+    <div class="r-center"><div class="r-num"><span class="r-big"></span><span class="r-sub"></span></div><div class="r-ok">${CHECK}<span class="r-sub">실적 50만 원 달성</span></div></div></div>`;
+}
+function phone(v,c){
+  const C=CASES[c];
+  const seg=`<div class="kv-seg" role="group" aria-label="관리비 보기" data-tab="0"${C.tabs?'':' hidden'}>${(C.tabs||['','']).map((l,i)=>`<button type="button" data-tab="${i}" aria-pressed="${i===0}">${l}</button>`).join('')}</div>`;
+  let body;
+  if(v==='a')body=`<p class="kv-eyebrow">아파트아이 × 디지로카</p><h1 class="kv-title">${titleQ(C)}</h1>${seg}<div class="card"><p class="m-label"></p>${ringHTML()}<p class="res"></p></div>`;
+  else if(v==='b')body=`<p class="kv-eyebrow"></p><h1 class="kv-title"></h1>${seg}<div class="card">${ringHTML()}<p class="bubble"></p></div>`;
+  else body=`<p class="kv-eyebrow">아파트아이 × 디지로카</p><h1 class="kv-title">${titleQ(C)}</h1>${seg}<p class="m-label"></p><div class="card">${ringHTML()}<div class="side"></div></div>`;
+  return `<div class="phone${V[v].dark?' dark':''}" data-v="${v}" data-case="${c}" data-tab="0">${HEAD}<div class="ph-scroll"><div class="kv kv-${v}">${body}<p class="fine">실적 50만 원 이상이면 관리비 10% 할인 (월 최대 6,000원)</p></div>${EVENT}</div><div class="ph-cta"><button type="button">카드 보기</button></div><div class="ph-nav" aria-hidden="true"></div></div>`;
+}
+function tween(el,from,to,ms,f){
+  if(!el)return;
+  if(reduce||from===to){el.textContent=f(to);return}
+  const t0=performance.now();cancelAnimationFrame(el._raf);
+  const step=t=>{const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=f(from+(to-from)*e);if(k<1)el._raf=requestAnimationFrame(step)};
+  el._raf=requestAnimationFrame(step);
+}
+function count(p,sel,key,to,f){const el=p.querySelector(sel);if(!el)return;const from=p['_'+key]??(key==='pct'?0:to*1.25);p['_'+key]=to;tween(el,from,to,900,f)}
+const pctF=v=>String(Math.round(v));
+function update(p){
+  const v=p.dataset.v,tab=+p.dataset.tab,m=model(p.dataset.case,tab),C=m.C;
+  const seg=p.querySelector('.kv-seg');seg.dataset.tab=tab;
+  seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.tab===tab)));
+  const ring=p.querySelector('.ring');ring.classList.toggle('done',m.done);
+  ring.setAttribute('aria-label',m.done?'실적 50만 원 달성':`실적 50만 원 중 ${m.pct}%`);
+  const prog=p.querySelector('.prog');
+  const knob=p.querySelector('.knob');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{prog.style.strokeDashoffset=CIRC*(1-m.pct/100);knob.style.transform=`rotate(${m.pct*3.6}deg)`}));
+  ring.classList.remove('shine-on');if(m.done){void ring.offsetWidth;ring.classList.add('shine-on')}
+  const big=p.querySelector('.r-big'),sub=p.querySelector('.r-num .r-sub');
+  if(v==='b'){
+    p.querySelector('.kv-eyebrow').innerHTML=m.hyp?HOUSE+'<span>관리비 예시</span><span class="tag">예시</span>':`${HOUSE}<span>${C.month} 관리비 기준</span>${C.tag?`<span class="tag">${C.tag}</span>`:''}`;
+    p.querySelector('.kv-title').innerHTML=m.done?(m.hyp?'관리비가 50만 원이면<br><em>실적을 다 채워요</em>':`${NAME}님 관리비로<br><em>실적을 다 채웠어요</em>`):`${NAME}님 관리비로<br>실적 <em><span class="n">0</span>%</em> 채웠어요`;
+    big.innerHTML=m.hyp?'50만<small>원</small>':`<span class="a">0</span><small>원</small>`;
+    sub.textContent='/ 실적 50만 원';
+    if(!m.hyp&&!m.done)count(p,'.r-big .a','fee',C.fee,fmt);
+    if(!m.done)count(p,'.kv-title .n','pct',m.pct,pctF);else p._pct=100;
+    p.querySelector('.bubble').innerHTML=COIN+(m.done?'<span>추가 사용 없이 <b>월 6,000원 할인</b>돼요</span>':`<span><b>${fmt(m.left)}원</b>만 더 쓰면 월 6,000원 할인</span>`);
+  }else{
+    p.querySelector('.m-label').innerHTML=labelHTML(m);
+    big.innerHTML='<span class="n">0</span><small>%</small>';sub.textContent='실적 50만 원 중';
+    count(p,'.r-big .n','pct',m.pct,pctF);
+    if(v==='a'){
+      const res=p.querySelector('.res');
+      if(m.done){res.innerHTML='추가 사용 없이<br>'+COIN+'<em>월 6,000원 할인</em>돼요'}
+      else{res.innerHTML='<em><span class="a"></span>원</em>만 더 쓰면<br>'+COIN+'월 6,000원 할인돼요';count(p,'.res .a','left',m.left,fmt)}
+    }else{
+      const side=p.querySelector('.side');
+      if(m.done){side.innerHTML=`<span>${m.hyp?'50만 원이면':'관리비만으로'}</span><b>실적 달성</b><small><em>월 6,000원</em> 할인돼요</small>`}
+      else{side.innerHTML='<span>더 쓰면 되는 금액</span><b><span class="a"></span>원</b><small><em>월 6,000원</em> 할인까지</small>';count(p,'.side .a','left',m.left,fmt)}
+    }
+  }
+}
+function mount(host,html){host.innerHTML=html;host.querySelectorAll('.phone').forEach(update)}
+function renderMain(){
+  mount(document.getElementById('main-phone'),phone(state.v,state.c));
+  document.getElementById('note').textContent=V[state.v].note;
+  document.getElementById('cap').textContent=V[state.v].name+' · '+CASES[state.c].name;
+  document.querySelectorAll('#vpicks button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pv===state.v)));
+  document.querySelectorAll('#cpicks button,#cseg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pc===state.c)));
+}
+function renderCompare(){
+  mount(document.getElementById('cmp'),Object.entries(V).map(([k,m])=>`<div class="cell"><h2>${m.name}</h2>${phone(k,state.c)}<button type="button" data-open="${k}">크게 보기</button></div>`).join(''));
+}
+function setView(v){
+  state.view=v;
+  document.getElementById('view-proto').hidden=v!=='proto';
+  document.getElementById('view-compare').hidden=v!=='compare';
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+  if(v==='compare')renderCompare();
+  try{history.replaceState(null,'','#'+v)}catch(e){}
+}
+document.getElementById('vpicks').innerHTML=Object.entries(V).map(([k,m])=>`<button type="button" data-pv="${k}"><span>${m.name}<small>${m.short}</small></span><i></i></button>`).join('');
+document.getElementById('cpicks').innerHTML=Object.entries(CASES).map(([k,C])=>`<button type="button" data-pc="${k}"><span>${C.name}<small>${C.short}</small></span><i></i></button>`).join('');
+document.getElementById('cseg').innerHTML=Object.entries(CASES).map(([k,C])=>`<button type="button" data-pc="${k}">${C.name}</button>`).join('');
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.view)setView(t.dataset.view);
+  else if(t.dataset.pv){state.v=t.dataset.pv;renderMain()}
+  else if(t.dataset.pc){state.c=t.dataset.pc;renderMain();if(state.view==='compare')renderCompare()}
+  else if(t.dataset.tab!==undefined){const p=t.closest('.phone');if(p.dataset.tab!==t.dataset.tab){p.dataset.tab=t.dataset.tab;update(p)}}
+  else if(t.dataset.open){state.v=t.dataset.open;renderMain();setView('proto');window.scrollTo(0,0)}
+});
+renderMain();
+setView((location.hash||'').slice(1)==='compare'?'compare':'proto');
+window.addEventListener('hashchange',()=>{const x=location.hash.slice(1);if(x==='compare'||x==='proto')setView(x)});
+})();
+</script>
+
+</body>
+</html>

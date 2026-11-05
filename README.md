@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v33): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v34): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -44,6 +44,7 @@
 | `v31_KV디자인반영/` | Figma 1296:18584 KV 반영: 그라디언트 오버라인·53%, 링 270px·(50만원 기준), 여백 확대, 툴팁 '월 6천원 할인' 강조, 혜택 카드 #1B2236·'6천원/1만원' |
 | `v32_10월라벨/` | 이번 달 데이터 없음 케이스 링 가운데 라벨 '지난달(10월) 관리비' → '10월 관리비' |
 | `v33_데이터없음타이틀/` | 관리비 데이터 없음 타이틀 '관리비가 50만원이면 / 카드 실적 **다** 채워요' ('다'만 강조) |
+| `v34_하단프로모션/` | KV 아래 프로모션 영역을 Figma 1315:18720대로: 이벤트(행사 기간·대상·내용·혜택 받는 날), 관리비 실적 인정, 카드 서비스 할인표·대상 가맹점·이용 조건, 유의사항(접기/펼치기)·심의필 |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

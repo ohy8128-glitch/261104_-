@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v39): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v40): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -50,6 +50,7 @@
 | `v37_스크롤없음/` | 프로토타입·한눈에 비교 모두 폰과 기획서를 브라우저 높이에 맞춰 축소해 페이지 스크롤이 생기지 않게 (폰 안 스크롤은 그대로) |
 | `v38_필터왼쪽_목업확대/` | 화면 구성·보기 방식 필터와 제목을 왼쪽 패널로 옮기고, 폰 목업을 브라우저 높이에 맞춰 최대 1.3배까지 크게 (스크롤 없음 유지) |
 | `v39_상태바/` | 폰 상태바를 Figma OS/Bar처럼(12:30 · 신호·와이파이·배터리 아이콘), 모서리에 잘리지 않게 화면 모서리 반경 조정, 기획서 폰도 같은 상태바 |
+| `v40_보조문구삭제/` | 왼쪽 패널 케이스·이벤트 서브텍스트와 시안 폰 아래 캡션('50만원 미만 · 폰 안 탭을 눌러보세요') 삭제 |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

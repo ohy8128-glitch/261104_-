@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v35): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v36): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -46,6 +46,7 @@
 | `v33_데이터없음타이틀/` | 관리비 데이터 없음 타이틀 '관리비가 50만원이면 / 카드 실적 **다** 채워요' ('다'만 강조) |
 | `v34_하단프로모션/` | KV 아래 프로모션 영역을 Figma 1315:18720대로: 이벤트(행사 기간·대상·내용·혜택 받는 날), 관리비 실적 인정, 카드 서비스 할인표·대상 가맹점·이용 조건, 유의사항(접기/펼치기)·심의필 |
 | `v35_비교화면맞춤/` | 한눈에 비교: 브라우저 폭·높이에 맞춰 폰 전체를 자동 축소해 가로·세로로 잘리지 않게 (기획서 함께 보기 포함) |
+| `v36_비교아이콘_보기순서/` | 한눈에 비교에서 캐시백 배너 별 아이콘이 사라지던 문제 수정(폰마다 그라디언트 id 분리), 보기 선택 순서를 시안 · 기획서 · 함께 보기로 |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

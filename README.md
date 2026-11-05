@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v29): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v30): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -40,6 +40,7 @@
 | `v27_디자인반영/` | Figma 1296:18309 KV 그대로 반영: 그라디언트 오버라인·53%, 링(손잡이 없음), 지난달 실적 라벨, 흰 툴팁+블루 강조, 보라 띠 혜택 카드 |
 | `v28_하단배너디자인/` | v26 + 하단 캐시백 배너를 Figma(1296:18694) 디자인으로: 그라디언트 별 아이콘, #2761FF 강조, 회색 1px 테두리, GNB 그림자, #F1F5FF 화살표 버튼 |
 | `v29_보기방식3종/` | 상단 '기획서' 버튼을 [시안 · 함께 보기 · 기획서] 3단 선택으로: 시안만 / 기획서와 나란히 / 기획서만 |
+| `v30_링하이라이트수정/` | 링 안쪽 흰 그림자(필터)가 깨지던 문제 수정: 마스크로 위쪽 2px 하이라이트를 깔끔하게 그림, 트랙 밝기 유지 |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

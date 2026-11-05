@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v44): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v45): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -55,6 +55,7 @@
 | `v42_패널간격/` | 왼쪽 패널 관리비 케이스·캐시백 이벤트·화면 구성·보기 방식 사이 간격 20px → 32px (낮은 화면 28px) |
 | `v43_이벤트상단여백/` | KV 아래 이벤트 영역 상단 여백을 40px로 (이전 버전의 -24px 겹침 제거) |
 | `v44_케이스버튼높이/` | 왼쪽 패널 관리비 케이스 버튼 4개 높이 52px (낮은 화면 46px) |
+| `v45_가정탭타이틀/` | '50만원 이라면' 탭을 누르면 타이틀이 '관리비가 50만원이면 / 카드 실적 **다** 채워요'로 바뀜 (내 관리비 탭으로 돌아오면 원래 타이틀) |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

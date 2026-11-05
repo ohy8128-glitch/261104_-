@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- v15 프로토타입(현재 링크, B 디자인 교체 + 기획서 비교): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- v16 프로토타입(현재 링크, B 디자인 교체 + 기획서 비교 + 카드 보기 스크롤 등장): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -26,6 +26,7 @@
 | `v13_그래프아이콘강화/` | 스펙트럴 그라디언트 링 · 눈금 점선 · 진행 끝 손잡이 · 달성 시 빛 띠 · 집/% 코인 아이콘 · 그라디언트 달성 배지 · 제목 그라디언트 강조 |
 | `v14_기획서비교/` | v12 + 상단 '기획서' 버튼: 기획서 v6(히어로형) KV를 원본 HTML 그대로 시안 왼쪽에 표시, 케이스 연동 |
 | `v15_B디자인교체/` | B 답이 먼저를 직접 제작한 Figma 디자인(1278:17089)으로 교체. 링 채움은 케이스별 데이터로 동작 |
+| `v16_카드보기스크롤등장/` | 하단 '카드 보기' 버튼: 첫 진입 숨김, KV를 지나 스크롤하면 아래에서 올라옴 (A·B 공통) |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

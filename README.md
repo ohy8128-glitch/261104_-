@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v37): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v38): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -48,6 +48,7 @@
 | `v35_비교화면맞춤/` | 한눈에 비교: 브라우저 폭·높이에 맞춰 폰 전체를 자동 축소해 가로·세로로 잘리지 않게 (기획서 함께 보기 포함) |
 | `v36_비교아이콘_보기순서/` | 한눈에 비교에서 캐시백 배너 별 아이콘이 사라지던 문제 수정(폰마다 그라디언트 id 분리), 보기 선택 순서를 시안 · 기획서 · 함께 보기로 |
 | `v37_스크롤없음/` | 프로토타입·한눈에 비교 모두 폰과 기획서를 브라우저 높이에 맞춰 축소해 페이지 스크롤이 생기지 않게 (폰 안 스크롤은 그대로) |
+| `v38_필터왼쪽_목업확대/` | 화면 구성·보기 방식 필터와 제목을 왼쪽 패널로 옮기고, 폰 목업을 브라우저 높이에 맞춰 최대 1.3배까지 크게 (스크롤 없음 유지) |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

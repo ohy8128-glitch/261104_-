@@ -38,10 +38,11 @@ button{font-family:var(--sans)}
 :focus-visible{outline:2px solid var(--pick-on-line);outline-offset:2px}
 
 /* ---------- 리뷰 셸 ---------- */
-.shell{max-width:1680px;margin:0 auto;display:grid;grid-template-columns:320px minmax(0,1fr);gap:40px;align-items:start}
+.shell{max-width:1680px;margin:0 auto;display:grid;grid-template-columns:400px minmax(0,1fr);gap:40px;align-items:start}
 .sidebar{position:sticky;top:0;display:flex;flex-direction:column;gap:18px;max-height:calc(100vh - 68px);overflow:auto;scrollbar-width:none}
 .sidebar::-webkit-scrollbar{display:none}
-@media (max-height:900px){.sidebar .rail{gap:28px;padding:16px}.sidebar .picks.cases button{padding:0 14px;height:46px}.sidebar .picks{gap:6px}.sidebar .rail h2{margin-bottom:8px}.sidebar .sw-row{padding-top:8px;padding-bottom:8px}.sidebar .vseg button{height:32px}.sidebar{gap:14px}}
+@media (max-height:900px){.sidebar .rail{gap:28px;padding:16px}.sidebar .picks.cases button{padding:0 16px;height:52px}.sidebar .picks{gap:6px}.sidebar .rail h2{margin-bottom:8px}.sidebar .sw-row{padding-top:8px;padding-bottom:8px}.sidebar .vseg button{height:40px}.sidebar{gap:14px}}
+@media (max-height:760px){.sidebar .rail{gap:14px;padding:14px 16px}.sidebar .picks.cases button{height:46px}.sidebar .sw-row{min-height:48px}.sidebar .rail h2{margin-bottom:6px}.sidebar .vseg button{height:38px}.sidebar .top h1{font-size:20px}.sidebar{gap:12px}}
 .sidebar .rail{position:static}
 .rail .vseg{display:flex;width:100%;box-sizing:border-box}
 .rail .vseg button{flex:1;padding:0 8px}
@@ -49,11 +50,11 @@ button{font-family:var(--sans)}
 .top small{display:block;font-size:13px;font-weight:600;color:var(--pick-on-fg);margin-bottom:4px}
 .top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.4px;text-wrap:balance}
 .vseg{display:inline-flex;background:var(--seg-bg);border-radius:99px;padding:3px;flex-wrap:wrap}
-.vseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 14px/1 var(--sans);height:36px;padding:0 16px;border-radius:99px;cursor:pointer;white-space:nowrap}
+.vseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 17px/1 var(--sans);height:44px;padding:0 16px;border-radius:99px;cursor:pointer;white-space:nowrap}
 .vseg button[aria-pressed="true"]{background:var(--seg-on);color:var(--seg-on-fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .proto{display:block}
 .rail{background:var(--panel);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:32px;position:sticky;top:calc(24px + env(safe-area-inset-top,0px))}
-.rail h2{margin:0 0 10px;font-size:15px;font-weight:600}
+.rail h2{margin:0 0 12px;font-size:18px;font-weight:700}
 .picks{display:flex;flex-direction:column;gap:8px}
 .picks button{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;border-radius:14px;border:1px solid transparent;background:var(--pick-bg);color:var(--sub);font:600 15px/1.4 var(--sans);text-align:left;cursor:pointer}
 .picks small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -62,7 +63,7 @@ button{font-family:var(--sans)}
 .picks button[aria-pressed="true"] small{color:var(--pick-on-fg);opacity:.75}
 .picks button[aria-pressed="true"] i{border:0;background:var(--pick-on-line)}
 .picks button[aria-pressed="true"] i::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--panel)}
-.picks.cases button{padding:0 16px;height:52px;font-size:15px;white-space:nowrap}
+.picks.cases button{padding:0 18px;height:60px;font-size:18px;white-space:nowrap}
 .note{border-top:1px solid var(--line);padding-top:16px;font-size:14px;color:var(--sub);display:flex;flex-direction:column;gap:6px}
 .note b{font-size:13px;font-weight:600;color:var(--muted)}
 .stage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
@@ -164,7 +165,7 @@ body.show-plan .compare .plan-col{margin-right:0}
 .phone.no-ev .ev-ban,.phone.no-ev .ev,.phone.no-ev .b-desc{display:none}
 .plan .hide-ev .pl-ev{display:none}
 @media (prefers-reduced-motion:reduce){.ev-ban .ev-go svg{animation:none}.ev-ban{transition:none}}
-.sw-row{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;border-radius:14px;border:0;background:var(--pick-bg);color:var(--sub);font:600 15px/1.4 var(--sans);text-align:left;cursor:pointer}
+.sw-row{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;border-radius:14px;border:0;background:var(--pick-bg);color:var(--sub);font:600 18px/1.4 var(--sans);text-align:left;cursor:pointer;min-height:60px;padding:0 18px}
 .sw-row small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--muted)}
 .sw-row i{flex:none;position:relative;width:44px;height:26px;border-radius:99px;background:var(--line);transition:background .2s}
 .sw-row i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s cubic-bezier(.3,.9,.3,1)}
@@ -453,6 +454,8 @@ body.hide-b [data-col="b"],body.hide-n [data-col="n"],body.hide-t [data-col="t"]
 .t-list div{display:flex;justify-content:space-between;font-size:15px;font-weight:500;line-height:1.45;white-space:nowrap}
 .t-list span{color:#F4F7F9}.t-list b{font-weight:500;color:#50F3FF}
 @media (prefers-reduced-motion:reduce){.t-lv{animation:none}.t-arc{transition:none}}
+.colx{display:none!important}
+.view-box{display:none!important}
 .ev-line{height:12px;background:var(--t-g100);margin:0 -24px 30px}
 </style>
 
@@ -508,7 +511,7 @@ body.hide-b [data-col="b"],body.hide-n [data-col="n"],body.hide-t [data-col="t"]
       <button type="button" data-show="plan" aria-pressed="false">기획서</button>
       <button type="button" data-show="both" aria-pressed="false">함께 보기</button>
     </div></div>
-    <div><h2>보기 방식</h2><div class="vseg" role="group" aria-label="보기 방식">
+    <div class="view-box"><h2>보기 방식</h2><div class="vseg" role="group" aria-label="보기 방식">
       <button type="button" data-view="proto" aria-pressed="true">프로토타입</button>
       <button type="button" data-view="compare" aria-pressed="false">한눈에 비교</button>
     </div></div>
@@ -897,7 +900,7 @@ document.addEventListener('click',e=>{
 });
 renderMain();
 hidden.add('b');hidden.add('n');applyHide();
-setView((location.hash||'').slice(1)==='compare'?'compare':'proto');
+setView('proto');
 window.addEventListener('hashchange',()=>{const x=location.hash.slice(1);if(x==='compare'||x==='proto')setView(x)});
 })();
 </script>

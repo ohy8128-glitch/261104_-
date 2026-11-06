@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v49): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v50): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -60,6 +60,7 @@
 | `v47_CTA버튼/` | 하단 '카드 보기' 버튼을 Figma 1340:35565대로: 완전 둥근 알약형, #3C70FF, 16px SemiBold, 여백 14/20/16 |
 | `v48_목업끄기/` | 기획서·시안 1·시안 2 목업마다 좌측 상단 X 버튼으로 끄기, 꺼진 화면은 왼쪽 패널 '꺼진 화면'에서 다시 켜기 (한눈에 비교는 줄 단위) |
 | `v49_X버튼우측/` | 목업 끄기 X 버튼을 우측 상단으로 옮기고 연한 회색(#F1F3F6 배경·#8B94A3 아이콘·얇은 테두리)으로 |
+| `v50_이벤트없음정리/` | 캐시백 이벤트 off일 때 '관리비도 카드 실적 인정' 카드도 숨김 (이벤트 영역 전체 미노출) |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

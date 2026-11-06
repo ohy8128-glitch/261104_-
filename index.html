@@ -424,12 +424,17 @@ body.hide-b [data-col="b"],body.hide-n [data-col="n"],body.hide-t [data-col="t"]
 .t-h{margin:0;font-size:28px;font-weight:600;line-height:38px;margin:-1px 0;color:#FFFFFF}
 .t-h em{font-style:normal;color:#35F1FF;background:linear-gradient(151.6deg,#35F1FF 31.8%,#4967FF 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .t-info{display:flex;flex-direction:column;gap:16px}
-.t-seg{position:relative;display:grid;grid-template-columns:1fr 1fr;height:48px;border-radius:10px;background:#25252B;overflow:hidden}
+.t-seg{position:relative;display:grid;grid-template-columns:1fr 1fr;height:49px;border-radius:10px;background:#25252B;overflow:hidden}
+.t-seg::after{content:"";position:absolute;inset:0;border:1px solid #41566B;border-radius:10px;pointer-events:none;z-index:2}
 .t-seg[hidden]{display:none}
 .t-seg::before{content:"";position:absolute;top:0;bottom:0;left:0;width:50%;border-radius:10px;background:#F5F7F9;transition:transform .32s cubic-bezier(.3,.9,.3,1)}
 .t-seg[data-tab="1"]::before{transform:translateX(100%)}
-.t-seg button{position:relative;z-index:1;appearance:none;border:0;background:transparent;color:#FFFFFF;font:500 16px/1.45 var(--sans);cursor:pointer;transition:color .2s}
-.t-seg button[aria-pressed="true"]{color:#1C1C1F}
+.t-seg button{position:relative;z-index:1;appearance:none;border:0;background:transparent;padding:4px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-family:var(--sans)}
+.t-seg button small{font-size:13px;font-weight:400;line-height:1.35;color:#F1F2F3;transition:color .2s}
+.t-seg button b{font-size:16px;font-weight:600;line-height:1.45;color:#FFFFFF;font-variant-numeric:normal;transition:color .2s}
+.t-seg button[aria-pressed="true"] small{color:#464D5A}
+.t-seg button[aria-pressed="true"] b{color:#1C1C1F}
+
 .t-content{display:flex;flex-direction:column;gap:14px}
 .t-card{border:1px solid #29282F;border-radius:20px;padding:20px 0;display:flex;flex-direction:column;align-items:center;gap:20px;background:radial-gradient(ellipse 160px 135px at 50% 50%,#0E3074 0%,#142549 50%,#171F33 75%,#1A1A1E 100%)}
 .t-gauge{position:relative;width:193px;height:130px}
@@ -728,7 +733,7 @@ function updateN(p,m,tab){
 }
 const T_C=90.425,T_R=76.025,T_W=28.8;
 const T_PATH=`M${T_C-T_R} ${T_C}A${T_R} ${T_R} 0 0 1 ${T_C+T_R} ${T_C}`;
-const T_TABS={under:['11월 관리비','50만 원 관리비'],nodata:['10월 관리비','50만 원 관리비']};
+const T_TABS={under:[['11월 관리비','266,880원'],['관리비가','50만 원이라면']],nodata:[['10월 관리비','248,500원'],['관리비가','50만 원이라면']]};
 function tGauge(){const id='tg'+(++bid);
   return `<div class="t-gauge" role="img"><svg width="181" height="105" viewBox="0 0 181 105" fill="none" aria-hidden="true"><defs>
   <linearGradient id="${id}a" gradientUnits="userSpaceOnUse" x1="14" y1="96" x2="150" y2="14"><stop stop-color="#4FF3FF"/><stop offset=".33" stop-color="#3ACEFF"/><stop offset=".66" stop-color="#34A1FF"/><stop offset="1" stop-color="#4967FF"/></linearGradient>
@@ -742,7 +747,7 @@ function tGauge(){const id='tg'+(++bid);
 }
 function tBody(c){const tabs=T_TABS[c];
   return `<div class="t-title"><p class="t-over">아파트아이 X 디지로카</p><h1 class="t-h">관리비로 카드실적<br><em>얼마나 채워질까?</em></h1></div>
-  <div class="t-info"><div class="t-seg" role="group" aria-label="관리비 보기" data-tab="0"${tabs?'':' hidden'}>${(tabs||['','']).map((l,i)=>`<button type="button" data-tab="${i}" aria-pressed="${i===0}">${l}</button>`).join('')}</div>
+  <div class="t-info"><div class="t-seg" role="group" aria-label="관리비 보기" data-tab="0"${tabs?'':' hidden'}>${(tabs||[['',''],['','']]).map((l,i)=>`<button type="button" data-tab="${i}" aria-pressed="${i===0}"><small>${l[0]}</small><b>${l[1]}</b></button>`).join('')}</div>
   <div class="t-content"><div class="t-card">${tGauge()}<div class="t-pill"><span class="t-ll"></span><b class="t-lv"></b></div></div>
   <div class="t-list"><div><span>실적 50만 원 이상</span><b>월 6,000원 할인</b></div><div><span>실적 100만 원 이상</span><b>월 10,000원 할인</b></div></div></div></div>`;
 }

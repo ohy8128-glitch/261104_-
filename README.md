@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v54): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v56): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - 시안 3 단독 프로토타입(v55): https://claude.ai/artifact/Dw5573PaeLSUUTJWBqcuGo
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
@@ -67,6 +67,7 @@
 | `v53_링라벨/` | 시안 2 링 안 라벨: 이번 달 데이터 없음은 '10월 실적', '50만 원이라면'(및 납부 이력 없음)은 라벨 없이 100%만 |
 | `v54_시안3추가/` | 시안 3 추가(Figma 이벤트_Reference 5677:62858): 반원 게이지·흐르는 그라디언트 금액·사각 세그먼트, 시안 2 오른쪽 배치, 한눈에 비교 3줄 + 케이스 제목 줄 |
 | `v55_시안3단독링크/` | 별도 링크용: 시안 3만 노출, Figma 4개 케이스(5677:71264~71267) 문구 반영 — 50만원 탭·납부 이력 없음은 게이지 라벨 '50만원이면', 달성 시 '관리비만으로 실적 달성 / 월 6,000원 할인' |
+| `v56_배너노출수정/` | KV가 짧은 케이스(50만원 이상·납부 이력 없음)에서도 첫 진입 시 하단 캐시백 배너 노출, 스크롤해서 이벤트 영역에 닿으면 숨김 (v55 시안 3 단독 링크에도 동일 반영) |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

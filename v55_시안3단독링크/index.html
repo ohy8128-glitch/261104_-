@@ -804,7 +804,7 @@ function update(p){
 // 하단 '카드 보기': 첫 진입엔 숨김, KV 끝을 지나 스크롤하면 아래에서 올라옴
 function ctaCheck(p){const s=p.querySelector('.ph-scroll'),kv=p.querySelector('.kv');if(!s||!kv)return;
   const on=s.scrollTop>8&&s.scrollTop+s.clientHeight>=kv.offsetTop+kv.offsetHeight+16;p.classList.toggle('cta-on',on);
-  const ev=p.querySelector('.ev');const near=ev&&s.scrollTop+s.clientHeight>=ev.offsetTop+60;
+  const ev=p.querySelector('.ev');const near=ev&&s.scrollTop>8&&s.scrollTop+s.clientHeight>=ev.offsetTop+60;
   p.classList.toggle('ban-off',on||!!near)}
 document.addEventListener('scroll',e=>{const s=e.target;if(s&&s.classList&&s.classList.contains('ph-scroll'))ctaCheck(s.closest('.phone'))},true);
 function mount(host,html){host.innerHTML=html;host.querySelectorAll('.phone').forEach(p=>{update(p);ctaCheck(p);})}

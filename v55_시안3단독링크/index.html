@@ -152,13 +152,13 @@ body.show-plan .compare .plan-col{margin-right:0}
 .ev-ban .ev-t b{font-weight:600;color:#2761FF}
 .ev-ban .ev-t span{color:#6B7684}
 .ev-ban .ev-spark{width:19.629px;height:18.715px;flex:none}
-.ev-ban .ev-spark path{transform-box:fill-box;transform-origin:50% 50%;animation:ev-twinkle 1.8s ease-in-out infinite}
-.ev-ban .ev-spark path:nth-of-type(2){animation-delay:.9s}
-@keyframes ev-twinkle{0%,100%{transform:scale(1) rotate(0);opacity:1}45%{transform:scale(.62) rotate(-18deg);opacity:.55}70%{transform:scale(1.12) rotate(6deg);opacity:1}}
+.ev-ban .ev-spark path{transform-box:fill-box;transform-origin:50% 50%;animation:ev-twinkle 3s linear infinite}
+.ev-ban .ev-spark path:nth-of-type(2){animation-duration:2.2s}
+@keyframes ev-twinkle{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.ev-ban .ev-spark path{animation:none}}
 
 .ev-ban .ev-go{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:11px;background:#F1F5FF;overflow:hidden}
-.ev-ban .ev-go svg{width:16px;height:16px;animation:ev-bob 1.4s ease-in-out infinite}
+.ev-ban .ev-go svg{width:16px;height:16px}
 @keyframes ev-bob{0%,100%{transform:translateY(-1px)}50%{transform:translateY(2px)}}
 .phone.ban-off .ev-ban{opacity:0;transform:translateY(100%);pointer-events:none}
 .phone.no-ev .ev-ban,.phone.no-ev .ev,.phone.no-ev .b-desc{display:none}

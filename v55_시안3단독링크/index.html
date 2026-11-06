@@ -647,7 +647,7 @@ function tween(el,from,to,ms,f){
   const step=t=>{const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=f(from+(to-from)*e);if(k<1)el._raf=requestAnimationFrame(step)};
   el._raf=requestAnimationFrame(step);
 }
-function count(p,sel,key,to,f){const el=p.querySelector(sel);if(!el)return;const from=p['_'+key]??(key==='pct'?0:to*1.25);p['_'+key]=to;tween(el,from,to,900,f)}
+function count(p,sel,key,to,f){const el=p.querySelector(sel);if(!el)return;const from=0;p['_'+key]=to;tween(el,from,to,900,f)}
 const pctF=v=>String(Math.round(v));
 
 const B_C=135,B_R=118.774,B_TOP=B_C-B_R;

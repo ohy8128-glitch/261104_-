@@ -459,6 +459,7 @@ body.hide-b [data-col="b"],body.hide-n [data-col="n"],body.hide-t [data-col="t"]
 /* 레이아웃: 목업은 화면 정중앙(1:1), 필터는 목업 왼쪽에 상단 정렬 (management-fee-v5 기준) */
 html:has(body.stage-fix),body.stage-fix{padding:0;height:100vh;overflow:hidden}
 body.stage-fix #stage-row .pcol{margin-left:0}
+.sidebar .top{display:none}
 body.stage-fix .shell{display:block;max-width:none;margin:0}
 body.stage-fix .sidebar{position:fixed;z-index:20;margin:0}
 body.stage-fix .area{position:relative;height:100vh}
@@ -878,13 +879,14 @@ function fitProto(){
   let s=Math.min(1,(vh-2*M)/H,(vw-2*M-SW-G)/W);s=Math.max(.45,s);
   row.style.zoom=String(s);
   const w=W*s,h=H*s;
-  let L=(vw-w)/2;const minL=M+SW+G;if(L<minL)L=minL;
   const T=Math.max(M,(vh-h)/2);
-  row.style.left=(L/s)+'px';row.style.top=(T/s)+'px';
+  let L=M+SW+G;row.style.left=(L/s)+'px';row.style.top=(T/s)+'px';
   const vis=[...row.querySelectorAll('.phone,.pl-phone')].filter(e=>e.offsetParent);
-  if(vis.length&&L>minL){const rs=vis.map(e=>e.getBoundingClientRect());const gc=(Math.min(...rs.map(r=>r.left))+Math.max(...rs.map(r=>r.right)))/2;L=Math.max(minL,L+(vw/2-gc));row.style.left=(L/s)+'px'}
+  if(vis.length){const rs=vis.map(e=>e.getBoundingClientRect());const pl=Math.min(...rs.map(r=>r.left)),pr=Math.max(...rs.map(r=>r.right));
+    const gw=SW+G+(pr-pl),gl=Math.max(M,(vw-gw)/2);L+=gl+SW+G-pl;row.style.left=(L/s)+'px';
+    var SBL=gl}else var SBL=M;
   const ph=vis[0];const PT=ph?ph.getBoundingClientRect().top:T;
-  sb.style.left=(L-G-SW)+'px';sb.style.top=PT+'px';sb.style.maxHeight=(vh-PT-M)+'px';
+  sb.style.left=SBL+'px';sb.style.top=PT+'px';sb.style.maxHeight=(vh-PT-M)+'px';
 }
 function fitAll(){fitCompare();fitProto()}
 window.addEventListener('resize',fitAll);

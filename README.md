@@ -4,6 +4,7 @@
 
 - 현재 프로토타입(v56): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - 시안 3 단독 프로토타입(v55): https://claude.ai/artifact/Dw5573PaeLSUUTJWBqcuGo
+- 시안 3 공개 링크(로그인 불필요, gh-pages 브랜치): https://ohy8128-glitch.github.io/261104_-/
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER

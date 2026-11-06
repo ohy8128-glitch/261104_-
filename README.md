@@ -2,7 +2,7 @@
 
 아파트아이 × 디지로카 프로모션 KV의 **아파트관리비 실적계산기** 시안을 버전별로 보관해요.
 
-- 현재 프로토타입(v46): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
+- 현재 프로토타입(v47): https://claude.ai/artifact/EwSHwn5Hmj7TT4nqbey28L
 - v5 프로토타입: https://claude.ai/artifact/L4S1aNgBj7Wp5VQvcQJRv3
 - v6 프로토타입: https://claude.ai/artifact/Ksdcvq7btS3ThRn3F96yfR
 - 처음 디자인 캔버스(A~D): https://claude.ai/artifact/NTFm5h37kggx5wLQASfAER
@@ -57,6 +57,7 @@
 | `v44_케이스버튼높이/` | 왼쪽 패널 관리비 케이스 버튼 4개 높이 52px (낮은 화면 46px) |
 | `v45_가정탭타이틀/` | '50만원 이라면' 탭을 누르면 타이틀이 '관리비가 50만원이면 / 카드 실적 **다** 채워요'로 바뀜 (내 관리비 탭으로 돌아오면 원래 타이틀) |
 | `v46_시안2추가/` | 시안 2(Figma 1325:14043, 블루 링·밑줄 탭·카드형)를 기존 시안 오른쪽에 추가, 한눈에 비교는 시안별 2줄. 케이스 순서·이름: 50만 원 미만 / 50만 원 이상 / 이번 달 데이터 없음 / 납부 이력 없음 |
+| `v47_CTA버튼/` | 하단 '카드 보기' 버튼을 Figma 1340:35565대로: 완전 둥근 알약형, #3C70FF, 16px SemiBold, 여백 14/20/16 |
 | `canvas/` | 디자인 캔버스 A~D 아트보드 원본 |
 
 각 버전 폴더의 `index.html`을 브라우저로 열면 돼요. 폰트는 `assets/pretendard.css`를 함께 씁니다.

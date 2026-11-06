@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="../assets/pretendard.css">
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>관리비 실적계산기 KV</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+
+/* Layout: 리뷰 셸(왼쪽 시안·케이스 선택 · 가운데 실제 크기 폰) + 한눈에 비교(같은 케이스, 시안 2종). 폰 안은 서비스 화면이라 테마 고정 */
+:root{
+  --bg:#F2F4F6; --panel:#FFFFFF; --line:#E5E8EB; --fg:#191F28; --sub:#4E5968; --muted:#8B95A1;
+  --pick-bg:#F2F4F6; --pick-on-bg:#E8F3FF; --pick-on-line:#3182F6; --pick-on-fg:#1B64DA;
+  --seg-bg:#E5E8EB; --seg-on:#FFFFFF; --seg-on-fg:#191F28; --bezel:#191F28;
+  /* 폰 안: 토스 스타일 팔레트 */
+  --t-blue:#3182F6; --t-blue-600:#2272EB; --t-blue-700:#1B64DA; --t-blue-50:#E8F3FF;
+  --t-g50:#F9FAFB; --t-g100:#F2F4F6; --t-g200:#E5E8EB; --t-g400:#B0B8C1; --t-g500:#8B95A1; --t-g600:#6B7684; --t-g700:#4E5968; --t-g900:#191F28;
+  --d-bg:#17171C; --d-card:#202027; --d-line:#2C2C35; --d-fg:#FFFFFF; --d-2:#C3C3C6; --d-3:#9E9EA4; --d-blue:#4C93FF;
+  --sans:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101115; --panel:#1B1D22; --line:#2C2F36; --fg:#F2F4F6; --sub:#C3C9D2; --muted:#8B95A1;
+  --pick-bg:#24262C; --pick-on-bg:#162843; --pick-on-line:#4C93FF; --pick-on-fg:#90C2FF;
+  --seg-bg:#2C2F36; --seg-on:#F2F4F6; --seg-on-fg:#191F28; --bezel:#000000; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101115; --panel:#1B1D22; --line:#2C2F36; --fg:#F2F4F6; --sub:#C3C9D2; --muted:#8B95A1;
+  --pick-bg:#24262C; --pick-on-bg:#162843; --pick-on-line:#4C93FF; --pick-on-fg:#90C2FF;
+  --seg-bg:#2C2F36; --seg-on:#F2F4F6; --seg-on-fg:#191F28; --bezel:#000000; color-scheme:dark}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--sans);font-size:14px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 24px;-webkit-font-smoothing:antialiased}
+button{font-family:var(--sans)}
+:focus-visible{outline:2px solid var(--pick-on-line);outline-offset:2px}
+
+/* ---------- 리뷰 셸 ---------- */
+.shell{max-width:1680px;margin:0 auto;display:grid;grid-template-columns:320px minmax(0,1fr);gap:40px;align-items:start}
+.sidebar{position:sticky;top:0;display:flex;flex-direction:column;gap:18px;max-height:calc(100vh - 68px);overflow:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+@media (max-height:900px){.sidebar .rail{gap:28px;padding:16px}.sidebar .picks.cases button{padding:0 14px;height:46px}.sidebar .picks{gap:6px}.sidebar .rail h2{margin-bottom:8px}.sidebar .sw-row{padding-top:8px;padding-bottom:8px}.sidebar .vseg button{height:32px}.sidebar{gap:14px}}
+.sidebar .rail{position:static}
+.rail .vseg{display:flex;width:100%;box-sizing:border-box}
+.rail .vseg button{flex:1;padding:0 8px}
+.top{margin:0}
+.top small{display:block;font-size:13px;font-weight:600;color:var(--pick-on-fg);margin-bottom:4px}
+.top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.4px;text-wrap:balance}
+.vseg{display:inline-flex;background:var(--seg-bg);border-radius:99px;padding:3px;flex-wrap:wrap}
+.vseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 14px/1 var(--sans);height:36px;padding:0 16px;border-radius:99px;cursor:pointer;white-space:nowrap}
+.vseg button[aria-pressed="true"]{background:var(--seg-on);color:var(--seg-on-fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.proto{display:block}
+.rail{background:var(--panel);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:32px;position:sticky;top:calc(24px + env(safe-area-inset-top,0px))}
+.rail h2{margin:0 0 10px;font-size:15px;font-weight:600}
+.picks{display:flex;flex-direction:column;gap:8px}
+.picks button{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;border-radius:14px;border:1px solid transparent;background:var(--pick-bg);color:var(--sub);font:600 15px/1.4 var(--sans);text-align:left;cursor:pointer}
+.picks small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.picks i{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--line);box-sizing:border-box;position:relative}
+.picks button[aria-pressed="true"]{background:var(--pick-on-bg);border-color:var(--pick-on-line);color:var(--pick-on-fg)}
+.picks button[aria-pressed="true"] small{color:var(--pick-on-fg);opacity:.75}
+.picks button[aria-pressed="true"] i{border:0;background:var(--pick-on-line)}
+.picks button[aria-pressed="true"] i::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--panel)}
+.picks.cases button{padding:0 16px;height:52px;font-size:14px;white-space:nowrap;letter-spacing:-.2px}
+.note{border-top:1px solid var(--line);padding-top:16px;font-size:14px;color:var(--sub);display:flex;flex-direction:column;gap:6px}
+.note b{font-size:13px;font-weight:600;color:var(--muted)}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.cap{font-size:14px;font-weight:500;color:var(--muted);text-align:center}.cap b{color:var(--fg);font-weight:600}
+.cmp-bar{max-width:1200px;margin:0 auto 18px;display:flex;justify-content:center}
+.compare{margin:0 auto;padding-bottom:8px;overflow:hidden}
+.row{display:flex;gap:16px;width:max-content;margin:0 auto;transform-origin:top left}
+.cmp-rows{display:flex;flex-direction:column;gap:40px}
+.cmp-r{display:flex;gap:16px}
+.pcol+.pcol{margin-left:-56px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:12px}
+.cell h2{margin:0;font-size:16px;font-weight:700}
+.cell>button{appearance:none;border:0;background:var(--seg-bg);color:var(--sub);font:600 14px/1 var(--sans);height:36px;padding:0 16px;border-radius:99px;cursor:pointer}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.sidebar{position:static}}
+
+
+/* ---------- 기획서 v6 KV (원본 그대로, .plan 범위로 격리) ---------- */
+.plan-col{display:flex;flex-direction:column;align-items:center;gap:14px}
+.plan-col[hidden]{display:none!important}
+.plan-h{display:none;margin:0;font-size:16px;font-weight:700}
+.compare .plan-h{display:block}
+.compare .plan-col{gap:12px;margin-right:48px}
+.plan{font-family:'IBM Plex Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.5;text-align:left}
+.plan *{box-sizing:border-box;margin:0;padding:0}
+.plan button{font:inherit;cursor:pointer;border:0;background:none}
+.plan button:focus-visible{outline:3px solid #FFC93C;outline-offset:2px}
+.plan .pl-phone{width:380px;height:820px;background:#1C2530;border-radius:32px;padding:10px;flex:none;box-shadow:0 30px 60px -30px rgba(13,16,32,.5)}
+.plan .pl-sb{position:absolute;left:0;right:0;top:0;z-index:4;background:#FFFFFF}
+.plan .pl-screen{position:relative;background:#FFFFFF;border-radius:22px;height:100%;overflow:hidden}
+.plan .pl-scroll{height:100%;overflow-y:auto;padding-bottom:96px;scrollbar-width:none}
+.plan .pl-scroll::-webkit-scrollbar{display:none}
+.plan .pl-scroll img{display:block;width:100%;height:auto}
+.plan .hero{background:radial-gradient(120% 70% at 50% 45%,#0B1A4A 0%,#03050C 55%,#000000 100%);color:#FFFFFF;padding:28px 20px 32px;text-align:center}
+.plan .brand{font-size:14px;color:#C9D0DB}
+.plan .hero h1{font-size:26px;font-weight:700;line-height:1.35;margin-top:8px}
+.plan .grad{background:linear-gradient(90deg,#4FC3F7,#8E6CFF 55%,#FF4FA3);-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan .hero .q{margin-top:22px;font-size:14px;color:#B8C0CC;text-align:left}
+.plan .ring{position:relative;width:190px;height:190px;margin:24px auto 0}
+.plan .ring>svg{position:static;width:100%;height:100%;transform:rotate(-90deg)}
+.plan .ring circle{fill:none;stroke-width:18}
+.plan .ring .bg{stroke:rgba(255,255,255,0.14)}
+.plan .ring .fg{stroke:url(#grad);stroke-linecap:round;transition:stroke-dashoffset .5s ease-out}
+.plan .ring .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.plan .ring small{font-size:13px;color:#B8C0CC}
+.plan .ring strong{font-size:46px;font-weight:700;line-height:1.1;letter-spacing:-1px}
+.plan .ring span{font-size:12px;color:#B8C0CC}
+.plan .remain{margin-top:16px}
+.plan .remain p{font-size:14px;color:#B8C0CC}
+.plan .remain strong{display:block;font-size:28px;font-weight:700;color:#8AB4FF;margin-top:2px}
+.plan .disc{margin-top:18px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px;text-align:left}
+.plan .disc p{font-size:13px;color:#B8C0CC}
+.plan .disc .row{display:flex;justify-content:space-between;font-size:15px;margin-top:6px;color:#E6EAF0;width:auto}
+.plan .disc .row b{font-weight:700}
+.plan .disc .row.on b{color:#8AB4FF}
+.plan .event-line{margin-top:16px;font-size:14px;color:#E6EAF0}
+.plan .event-line b{color:#FFC93C}
+.plan .pill{display:block;width:100%;height:52px;border-radius:26px;background:#FFFFFF;color:#1B2330;font-size:16px;font-weight:600;margin-top:20px}
+.plan .foot{font-size:12px;color:#9AA3B0;margin-top:12px;line-height:1.5}
+.plan .sticky{position:absolute;left:0;right:0;bottom:0;padding:12px 20px 16px;background:linear-gradient(rgba(255,255,255,0),#FFFFFF 30%)}
+.plan .sticky button{width:100%;height:54px;border-radius:27px;background:#3D6CF5;color:#FFFFFF;font-size:17px;font-weight:700}
+.plan .fees{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+.plan .fees.two{grid-template-columns:1.4fr 1fr}
+.plan .fees button,.plan .fees .info{min-height:56px;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#FFFFFF}
+.plan .fees button small,.plan .fees .info small{font-size:12px;color:#B8C0CC}
+.plan .fees button b,.plan .fees .info b{font-size:17px;font-weight:700}
+.plan .fees button[aria-pressed="true"]{background:#3D6CF5;border-color:#3D6CF5}
+.plan .fees button[aria-pressed="true"] small{color:#DCE5FF}
+.plan .toast{position:absolute;left:20px;right:20px;bottom:88px;background:#1B2330;color:#FFFFFF;font-size:14px;text-align:center;border-radius:12px;padding:12px;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
+.plan .toast.on{opacity:1;transform:none}
+.plan-miss{position:absolute;left:16px;right:16px;top:96px;z-index:3;padding:12px 14px;border-radius:12px;background:rgba(27,35,48,.92);color:#FFFFFF;font:600 14px/1.45 var(--sans);text-align:center}
+body.show-plan .pcol,body.show-plan #cmp .cmp-r,body.show-plan #cmp .cell{display:none!important}
+body.show-plan .compare .plan-col{margin-right:0}
+.top-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+@media (min-width:861px){.stage-row{flex-wrap:nowrap!important}}
+.stage-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:32px 104px}
+.pcol{display:flex;flex-direction:column;align-items:center;gap:14px}
+
+@media (prefers-reduced-motion:reduce){.plan *{transition:none!important}}
+
+
+/* 캐시백 이벤트 플로팅 배너 (이벤트 진행 시에만) */
+.ev-ban{position:absolute;left:0;right:0;bottom:48px;z-index:6;display:flex;align-items:center;gap:8px;height:52px;padding:0 20px;border:1px solid #F1F2F3;border-bottom:0;border-radius:16px 16px 0 0;background:#FFFFFF;box-shadow:0 -8px 20px rgba(100,107,119,.1);font:600 14px/1.45 var(--sans);white-space:nowrap;text-align:left;cursor:pointer;transition:opacity .25s,transform .3s cubic-bezier(.22,1,.36,1)}
+.ev-ban .ev-l{flex:1;min-width:0;display:flex;align-items:center;gap:4px}
+.ev-ban .ev-t{display:flex;align-items:center;gap:4px}
+.ev-ban .ev-t b{font-weight:600;color:#2761FF}
+.ev-ban .ev-t span{color:#6B7684}
+.ev-ban .ev-spark{width:19.629px;height:18.715px;flex:none}
+.ev-ban .ev-go{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:11px;background:#F1F5FF;overflow:hidden}
+.ev-ban .ev-go svg{width:16px;height:16px;animation:ev-bob 1.4s ease-in-out infinite}
+@keyframes ev-bob{0%,100%{transform:translateY(-1px)}50%{transform:translateY(2px)}}
+.phone.ban-off .ev-ban{opacity:0;transform:translateY(100%);pointer-events:none}
+.phone.no-ev .ev-ban,.phone.no-ev .ev,.phone.no-ev .b-desc{display:none}
+.plan .hide-ev .pl-ev{display:none}
+@media (prefers-reduced-motion:reduce){.ev-ban .ev-go svg{animation:none}.ev-ban{transition:none}}
+.sw-row{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;border-radius:14px;border:0;background:var(--pick-bg);color:var(--sub);font:600 15px/1.4 var(--sans);text-align:left;cursor:pointer}
+.sw-row small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--muted)}
+.sw-row i{flex:none;position:relative;width:44px;height:26px;border-radius:99px;background:var(--line);transition:background .2s}
+.sw-row i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s cubic-bezier(.3,.9,.3,1)}
+.sw-row[aria-checked="true"] i{background:var(--pick-on-line)}
+.sw-row[aria-checked="true"] i::after{transform:translateX(18px)}
+
+/* ---------- 폰 ---------- */
+.phone{width:360px;height:800px;border:10px solid var(--bezel);border-radius:32px;box-sizing:content-box;overflow:hidden;position:relative;background:#FFFFFF;box-shadow:0 30px 60px -30px rgba(13,16,32,.5);flex:none}
+
+@media (max-width:420px){.stage .phone{zoom:.86}}
+.ph-head{position:absolute;inset:0 0 auto;height:80px;z-index:5;background:#FFFFFF;color:var(--t-g900)}
+.ph-status{height:24px;display:block;padding:0;background:#FFFFFF;overflow:hidden}
+.ph-status .sb-svg{display:block;width:360px;height:24px}
+
+.ph-nav-top{height:56px;box-sizing:border-box;display:grid;grid-template-columns:24px 1fr 24px;gap:8px;align-items:center;padding:0 20px 0 12px;font:600 16px/1 var(--sans);text-align:center}
+.ph-nav-top svg{width:24px;height:24px}
+.phone.dark .ph-head{background:var(--d-bg);color:var(--d-fg)}
+.phone[data-v="b"] .ev{position:relative;margin-top:-24px;border-radius:24px 24px 0 0}
+.ph-scroll{position:absolute;top:80px;bottom:48px;left:0;right:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
+.ph-scroll::-webkit-scrollbar{display:none}
+.ph-cta{position:absolute;left:0;right:0;bottom:48px;z-index:6;padding:14px 20px 16px;background:linear-gradient(rgba(255,255,255,0),#FFFFFF 28%);transform:translateY(calc(100% + 48px));visibility:hidden;transition:transform .4s cubic-bezier(.22,1,.36,1),visibility 0s .4s}
+.phone.cta-on .ph-cta{transform:none;visibility:visible;transition:transform .4s cubic-bezier(.22,1,.36,1),visibility 0s}
+@media (prefers-reduced-motion:reduce){.ph-cta,.phone.cta-on .ph-cta{transition:none}}
+.ph-cta button{width:100%;height:54px;padding:0 20px;border:0;border-radius:99px;background:#3C70FF;color:#FFFFFF;font:600 16px/1.45 var(--sans);cursor:pointer}
+.ph-nav{position:absolute;inset:auto 0 0;height:48px;z-index:7;background:#f5f5f7 url(a/nav.png) no-repeat 0 0/360px 48px}
+
+/* ---------- KV 360×700 · 공통 ---------- */
+.kv{position:relative;height:700px;box-sizing:border-box;padding:28px 24px 28px;display:flex;flex-direction:column;font-variant-numeric:tabular-nums;background:#FFFFFF;color:var(--t-g900)}
+.kv-eyebrow{display:flex;align-items:center;gap:6px;min-height:20px;margin:0;font-size:14px;font-weight:500;color:var(--t-g600)}
+.kv-title{margin:6px 0 0;font-size:26px;line-height:1.36;font-weight:700;letter-spacing:-.7px}
+.kv-title em{font-style:normal;color:var(--t-blue)}
+.kv-seg{position:relative;display:grid;grid-template-columns:1fr 1fr;width:100%;height:44px;margin-top:20px;padding:3px;box-sizing:border-box;border-radius:12px;background:var(--t-g100)}
+.kv-seg[hidden]{display:none}
+.kv-seg::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:9px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:transform .32s cubic-bezier(.3,.9,.3,1)}
+.kv-seg[data-tab="1"]::before{transform:translateX(100%)}
+.kv-seg button{position:relative;z-index:1;appearance:none;border:0;background:transparent;color:var(--t-g500);font:500 15px/1 var(--sans);cursor:pointer;transition:color .2s}
+.kv-seg button[aria-pressed="true"]{color:var(--t-g900);font-weight:600}
+.m-label{display:flex;align-items:center;gap:6px;margin:0;font-size:15px;font-weight:500;color:var(--t-g700)}
+.m-label b{font-weight:600;color:var(--t-g900)}
+.tag{font-size:12px;font-weight:600;line-height:1;color:var(--t-blue-700);padding:5px 7px;border-radius:6px;background:var(--t-blue-50)}
+.ring{position:relative;width:176px;height:176px;flex:none}
+.ring>svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--t-g200)}
+.ring .prog{stroke:var(--t-blue);transition:stroke-dashoffset .9s cubic-bezier(.22,1,.36,1)}
+.r-center{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.r-center>div{grid-area:1/1;display:flex;flex-direction:column;align-items:center;transition:opacity .25s,transform .35s cubic-bezier(.3,.9,.3,1)}
+.r-big{font-size:46px;font-weight:700;letter-spacing:-1.6px;line-height:1}
+.r-big small{font-size:24px;letter-spacing:-.4px;margin-left:1px}
+.r-sub{margin-top:6px;font-size:13px;font-weight:500;color:var(--t-g500)}
+.r-ok svg{width:46px;height:46px;color:var(--t-blue)}
+.r-ok path{stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .45s .35s ease-out}
+.ring:not(.done) .r-ok,.ring.done .r-num{opacity:0;transform:scale(.92);pointer-events:none}
+.ring.done .r-ok path{stroke-dashoffset:0}
+.res{margin:0;font-size:20px;line-height:1.42;font-weight:600;letter-spacing:-.4px}
+.res em{font-style:normal;font-weight:700;color:var(--t-blue)}
+.fine{margin:auto 0 0;font-size:12px;line-height:1.5;color:var(--t-g400)}
+@media (prefers-reduced-motion:reduce){.kv-seg::before,.ring .prog,.r-center>div,.r-ok path{transition:none}}
+
+/* A · 라이트 카드형 */
+.kv-a .card{margin-top:16px;background:var(--t-g50);border-radius:24px;padding:22px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.kv-a .ring{width:160px;height:160px}
+.kv-a .r-big{font-size:42px}
+.kv-a .kv-seg[hidden]+.card{margin-top:24px}
+
+/* B · 라이트 답 먼저 + 말풍선 */
+.kv-b .card{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.kv-b .ring{width:196px;height:196px}
+.kv-b .r-big{font-size:28px;letter-spacing:-.8px}
+.kv-b .r-big small{font-size:28px}
+.kv-b .r-sub{font-size:14px}
+.kv-b .kv-seg[hidden]+.card{margin-top:28px}
+.bubble{position:relative;margin:0;padding:12px 16px;border-radius:14px;background:var(--t-blue-50);color:var(--t-blue-700);font-size:16px;font-weight:600;line-height:1.4;letter-spacing:-.3px;text-align:center}
+.bubble::before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;background:inherit;transform:rotate(45deg);border-radius:2px}
+.bubble b{font-weight:700}
+
+
+/* B · 답이 먼저 (Figma 1278:17542 디자인) */
+.kv-b{height:auto;padding:0;align-items:stretch;text-align:center;color:#FFFFFF;background:linear-gradient(121.08deg,#19112B 12.47%,#101725 62.28%,#081045 111.6%),linear-gradient(180deg,#000000 53.36%,#323E6A 100%)}
+.kv-b .fine{display:none}
+.b-title{padding:60px 20px 40px;display:flex;flex-direction:column;gap:10px}
+.b-over{margin:0;font-size:15px;font-weight:500;line-height:1.45;color:#B781F9;background:linear-gradient(90deg,#B781F9 30.16%,#8D98F9 70.16%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.b-h{margin:0;font-size:28px;font-weight:600;line-height:40px;margin:-2px 0!important;color:#FFFFFF}
+.b-h em{font-style:normal;color:#B781F9;background:linear-gradient(90deg,#B781F9 30.16%,#8D98F9 70.16%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.b-sub{margin:0;font-size:18px;font-weight:400;line-height:1.45;color:#E8EAED}
+.b-body{padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:30px}
+.b-seg{position:relative;display:grid;grid-template-columns:1fr 1fr;width:100%;height:48px;padding:4px;box-sizing:border-box;border-radius:999px;background:#352B4B}
+.b-seg[hidden]{display:none}
+.b-seg::before{content:"";position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:#F5F7F9;transition:transform .32s cubic-bezier(.3,.9,.3,1)}
+.b-seg[data-tab="1"]::before{transform:translateX(100%)}
+.b-seg button{position:relative;z-index:1;appearance:none;border:0;background:transparent;color:#8F99A9;font:500 16px/1.45 var(--sans);cursor:pointer;transition:color .2s}
+.b-seg button[aria-pressed="true"]{color:#1C1C1F}
+.b-ring{position:relative;width:270px;height:270px;flex:none}
+.b-ring>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.b-arc,.b-glow{transition:stroke-dashoffset .9s cubic-bezier(.22,1,.36,1),opacity .3s}
+.b-knobg{display:none;transform-origin:135px 135px;transition:transform .9s cubic-bezier(.22,1,.36,1),opacity .2s}
+.b-center{position:absolute;left:50%;top:calc(50% + .5px);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;white-space:nowrap}
+.b-center>div{display:flex;flex-direction:column;align-items:center}
+.b-lab{font-size:17px;font-weight:500;line-height:1.45;color:#AAB0BC}
+.b-amt{font-size:30px;font-weight:700;line-height:1.3;color:#FFFFFF}
+.b-cap{font-size:12px;font-weight:400;line-height:1.35;color:#7A8290}
+.b-cap[hidden]{display:none}
+.b-ex{font-size:12px;font-weight:600;line-height:1;color:#1A1230;background:#A98BFF;border-radius:6px;padding:4px 7px}
+.b-ex[hidden]{display:none}
+.b-tip{display:flex;flex-direction:column;align-items:center;margin-top:30px;padding:0 24px}
+.b-tip svg{display:block}
+.b-tip p{margin:0;padding:12px 16px;border-radius:14px;background:#F1ECFF;color:#0F162E;font-size:16px;font-weight:500;line-height:22px;letter-spacing:-.3px;white-space:nowrap}
+.b-tip b{font-weight:600;color:#5B30C9}
+.b-tip .n{color:#0E152C}
+.b-ben{margin-top:41px;padding:0 20px 36px;display:flex;flex-direction:column;gap:20px}
+.b-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.b-card{background:#1B2236;border-radius:16px;padding:18px 14px 18px 16px;text-align:left;display:flex;flex-direction:column;gap:6px}
+.b-card span{font-size:15px;font-weight:500;line-height:1.4;color:#9FA8B5}
+.b-card b{font-size:19px;font-weight:700;line-height:1.35;letter-spacing:-.5px;color:#FFFFFF;white-space:nowrap}
+.b-card b i{font-style:normal;font-size:16px;font-weight:500;letter-spacing:-.2px;color:#9FA8B5}
+.b-desc{margin:0;font-size:14px;line-height:1.5;color:#626978}
+@media (prefers-reduced-motion:reduce){.b-arc,.b-glow,.b-knobg,.b-seg::before{transition:none}}
+
+/* C · 다크 가로형 */
+.kv-c{background:var(--d-bg);color:var(--d-fg)}
+.kv-c .kv-eyebrow{color:var(--d-3)}
+.kv-c .kv-title em{color:var(--d-blue)}
+.kv-c .kv-seg{background:var(--d-card)}
+.kv-c .kv-seg::before{background:#3A3A45;box-shadow:none}
+.kv-c .kv-seg button{color:var(--d-3)}
+.kv-c .kv-seg button[aria-pressed="true"]{color:var(--d-fg)}
+.kv-c .m-label{margin-top:28px;color:var(--d-2)}
+.kv-c .kv-seg[hidden]+.m-label{margin-top:36px}
+.kv-c .m-label b{color:var(--d-fg)}
+.kv-c .tag{color:#90C2FF;background:rgba(76,147,255,.16)}
+.kv-c .card{margin-top:12px;background:var(--d-card);border-radius:24px;padding:20px;display:flex;align-items:center;gap:18px}
+.kv-c .ring{width:120px;height:120px}
+.kv-c .ring .track{stroke:var(--d-line)}
+.kv-c .ring .prog{stroke:var(--d-blue)}
+.kv-c .r-big{font-size:30px;letter-spacing:-1px}
+.kv-c .r-big small{font-size:17px}
+.kv-c .r-ok svg{width:36px;height:36px;color:var(--d-blue)}
+.kv-c .r-sub{display:none}
+.side{display:flex;flex-direction:column;gap:4px;min-width:0}
+.side>span{font-size:14px;font-weight:500;color:var(--d-3)}
+.side b{font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.3}
+.side small{font-size:14px;font-weight:500;color:var(--d-2)}
+.side small em{font-style:normal;font-weight:600;color:#90C2FF}
+.kv-c .fine{color:#5E5E66}
+
+/* ---------- 아래 이벤트 섹션 ---------- */
+.ct{background:#FFFFFF;color:#1C1C1F;text-align:left;font-family:var(--sans)}
+.ct p{margin:0}
+.ct-top{padding:40px 20px;display:flex;flex-direction:column;gap:10px}
+.ct .ev{padding:0;margin-top:0!important;border-radius:0!important;display:flex;flex-direction:column;gap:20px;background:none;color:#1C1C1F}
+.ct-tt{display:flex;flex-direction:column;gap:12px}
+.ct-tag{align-self:flex-start;padding:4px 8px;border-radius:99px;background:#2761FF;color:#FFFFFF;font-size:13px;font-weight:600;line-height:1.35}
+.ct-tt h2{margin:0;font-size:22px;font-weight:700;line-height:1.4;letter-spacing:0}
+.ct-tt .d{margin-top:-4px;font-size:18px;line-height:1.45}
+.ct-box{background:#F4F7F9;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:20px}
+.ct-box div{display:flex;flex-direction:column;gap:6px;line-height:1.45}
+.ct-box h3{margin:0;font-size:17px;font-weight:600;line-height:1.45}
+.ct-box p{font-size:15px}
+.ct-row{display:flex;align-items:center;gap:16px;padding:20px 16px;border-radius:16px;background:#F5F7F9}
+.ct-row img{width:60px;height:48px;flex:none}
+.ct-row b{display:block;font-size:17px;font-weight:600;line-height:1.45}
+.ct-row span{display:block;margin-top:4px;font-size:15px;line-height:1.45}
+.ct-ben{background:#F1F5FF;padding:40px 20px}
+.ct-card{background:#FFFFFF;border-radius:16px;padding:20px 16px;display:flex;flex-direction:column;gap:20px}
+.ct-head{display:flex;gap:8px;align-items:center}
+.ct-head img{width:62px;height:48px;flex:none;margin:0 -1px}
+.ct-head .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ct-head small{font-size:13px;line-height:1.35;color:#464D5A}
+.ct-head b{font-size:18px;font-weight:600;line-height:1.45}
+.ct-head b em{font-style:normal;color:#2761FF}
+.ct-head .l{font-size:15px;line-height:1.45}
+.ct-head .n{font-size:14px;line-height:1.45;color:#464D5A}
+.ct-tbl{width:100%;border-collapse:collapse;table-layout:fixed;font-size:15px;line-height:1.45;text-align:center}
+.ct-tbl col.c1{width:90px}.ct-tbl col.c2{width:63px}
+.ct-tbl td,.ct-tbl th{padding:12px 2px;white-space:nowrap;border-bottom:1px solid #CDD1D8;border-left:1px solid #CDD1D8;font-weight:400;vertical-align:middle}
+.ct-tbl tr>:first-child{border-left:0}
+.ct-tbl th{font-weight:600}
+.ct-tbl tr.h1 th{background:#E8EAED}
+.ct-tbl tr.h2 th{background:#F4F5F8}
+.ct-sub{display:flex;flex-direction:column;gap:12px}
+.ct-sub h4{margin:0 0 6px;font-size:15px;font-weight:700;line-height:1.45}
+.ct-sub ul{margin:0;padding:0;list-style:none;color:#363C43;font-size:15px;line-height:1.45}
+.ct-sub li{display:flex;gap:8px}
+.ct-sub li::before{content:"·";font-size:14px;font-weight:500;line-height:24px}
+.ct-sub .x{display:flex;gap:8px;color:#363C43;font-size:15px;line-height:1.45}
+.ct-sub .x::before{content:"※";font-size:16px}
+.ct-dis{padding:32px 24px 136px;display:flex;flex-direction:column;gap:16px;color:#363C43;font-size:15px;line-height:1.45}
+.ct-dtg{appearance:none;border:0;background:none;padding:0;height:24px;display:flex;align-items:center;justify-content:space-between;width:100%;font:600 16px/1.45 var(--sans);color:#2A2A2A;cursor:pointer}
+.ct-dtg svg{transition:transform .2s}
+.ct-dis:not(.open) .ct-dtg svg{transform:rotate(180deg)}
+.ct-dis:not(.open) .ct-db{display:none}
+.ct-db{display:flex;flex-direction:column;gap:6px}
+.ct-db h5{margin:0;font-size:15px;font-weight:600;line-height:1.45}
+.ct-db h5:not(:first-child){margin-top:10px}
+.ct-db p{display:flex;gap:3px}
+.ct-db p::before{content:"·"}
+.ct-db p.s{padding-left:12px}
+.ct-db p.s::before{content:"- "; white-space:pre}
+.ct-db p.st::before{content:"*"}
+.ct-db u{text-underline-position:from-font}
+.ct-db .b{font-weight:600}
+.ct-db .sim{margin-top:10px;color:#626978;font-size:14px}
+.ct-db .sim::before{content:none}
+.phone.no-ev .ct .ev,.phone.no-ev .ct .ev-only{display:none}
+.phone.no-ev .ct-top{padding-top:40px}
+
+/* 시안 2 (Figma 1325:14043) */
+.kv-n{height:auto;padding:40px 24px 30px;gap:30px;align-items:stretch;text-align:center;color:#FFFFFF;background:linear-gradient(178.95deg,#14192C .47%,#000000 23.8%)}
+.kv-n .fine{display:none}
+.phone[data-v="n"] .ph-scroll{background:#000}
+.n-title{display:flex;flex-direction:column;gap:10px}
+.n-over{margin:0;font-size:15px;font-weight:500;line-height:1.45;color:#8FB8EC;background:linear-gradient(168.6deg,#C4EDF0 31.8%,#427AE1 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.n-h{margin:0;font-size:28px;font-weight:600;line-height:40px;margin:-2px 0;color:#FFFFFF}
+.n-h em{font-style:normal;color:#8FC6EC;background:linear-gradient(120.5deg,#C4EDF0 31.8%,#427AE1 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.n-wrap{display:flex;flex-direction:column;gap:10px}
+.n-card{background:#1C1C1F;border-radius:10px;overflow:hidden;padding-bottom:30px;display:flex;flex-direction:column;gap:30px;align-items:center}
+.n-tabs{display:flex;width:100%;background:#010101}
+.n-tabs[hidden]{display:none}
+.kv-n .n-tabs[hidden]+.n-main{padding-top:30px}
+.n-tabs button{flex:1;appearance:none;border:0;border-bottom:2px solid #464D5A;background:#1C1C1F;padding:12px 0;color:#7A8290;font:500 16px/1.45 var(--sans);cursor:pointer;transition:color .2s,border-color .2s}
+.n-tabs button[aria-pressed="true"]{border-bottom-color:#467DE1;color:#F4F5F8;font-weight:600}
+.n-main{display:flex;flex-direction:column;align-items:center;gap:15.5px}
+.n-ring{position:relative;width:159.2px;height:159.2px}
+.n-ring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.n-arc{transition:stroke-dashoffset .9s cubic-bezier(.22,1,.36,1)}
+.n-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;white-space:nowrap}
+.n-lab{font-size:13px;font-weight:500;line-height:1.35;color:#AAB0BC}
+.n-pct{margin-top:2px;font-size:34px;font-weight:700;line-height:1;color:#FFFFFF}
+.n-fee{margin-top:5px;font-size:11px;font-weight:500;line-height:1.35;color:#7A8290}
+.n-left{display:flex;flex-direction:column;align-items:center}
+.n-ll{font-size:16px;font-weight:500;line-height:1.45;color:#8F99A9}
+.n-lv{font-size:28px;font-weight:600;line-height:1.3;color:#FFFFFF}
+.n-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left}
+.n-list>div{background:#1C1C1F;border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:4px;white-space:nowrap}
+.n-list span{font-size:14px;font-weight:500;line-height:1.45;color:#8F99A9}
+.n-list b{font-size:16px;font-weight:600;line-height:1.45;color:#FFFFFF}
+.n-list i{font-style:normal;font-weight:500;color:#8F99A9}
+.n-desc{margin:10px 0 0;font-size:14px;line-height:1.5;color:#626978}
+.ev-line{height:12px;background:var(--t-g100);margin:0 -24px 30px}
+</style>
+
+
+
+<div class="plan-col" id="plan-col" hidden>
+  <h2 class="plan-h">기획서 v6</h2>
+  <div class="plan">
+    <div class="pl-phone" aria-label="기획서 v6 히어로형 KV">
+      <div class="pl-screen"><div class="ph-status pl-sb"><svg class="sb-svg" width="360" height="24" aria-hidden="true" viewBox="0 0 360 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="24" fill="white"/><path d="M280.117 13.5C280.702 13.5 281.177 14.0037 281.177 14.625V16.875C281.177 17.4963 280.702 18 280.117 18H279.059C278.474 17.9999 278 17.4962 278 16.875V14.625C278 14.0038 278.474 13.5001 279.059 13.5H280.117ZM285.059 11.25C285.643 11.25 286.117 11.7537 286.117 12.375V16.875C286.117 17.4963 285.643 18 285.059 18H284C283.415 18 282.941 17.4963 282.941 16.875V12.375C282.941 11.7537 283.415 11.25 284 11.25H285.059ZM290 8.625C290.585 8.62501 291.059 9.12869 291.059 9.75V16.875C291.059 17.4963 290.585 18 290 18H288.941C288.357 18 287.883 17.4963 287.883 16.875V9.75C287.883 9.12868 288.357 8.625 288.941 8.625H290ZM294.941 6C295.526 6.00013 296 6.50376 296 7.125V16.875C296 17.4962 295.526 17.9999 294.941 18H293.883C293.298 18 292.823 17.4963 292.823 16.875V7.125C292.823 6.50368 293.298 6 293.883 6H294.941Z" fill="#170E2B"/><path d="M307.686 15.1924C309.022 14.012 310.979 14.012 312.315 15.1924C312.383 15.2559 312.422 15.3459 312.424 15.4405C312.426 15.5351 312.39 15.6271 312.325 15.6934L310.232 17.8985C310.171 17.9633 310.087 18 310 18C309.913 17.9999 309.83 17.9632 309.769 17.8985L307.676 15.6934C307.611 15.627 307.575 15.5351 307.577 15.4405C307.579 15.3458 307.618 15.2558 307.686 15.1924ZM304.894 12.25C307.773 9.45274 312.231 9.45258 315.11 12.25C315.175 12.3156 315.212 12.4057 315.213 12.5C315.214 12.5943 315.179 12.685 315.115 12.752L313.905 14.0293C313.781 14.1596 313.579 14.1621 313.451 14.0352C312.506 13.141 311.275 12.6455 310 12.6455C308.726 12.6462 307.496 13.1416 306.552 14.0352C306.424 14.1621 306.222 14.1597 306.098 14.0293L304.889 12.752C304.825 12.6851 304.789 12.5944 304.79 12.5C304.791 12.4057 304.829 12.3156 304.894 12.25ZM302.101 9.31546C306.517 4.89485 313.484 4.89485 317.899 9.31546C317.963 9.38113 317.999 9.47085 318 9.56448C318.001 9.65805 317.965 9.74807 317.902 9.81448L316.691 11.0909C316.567 11.2218 316.364 11.2237 316.237 11.0948C314.555 9.42393 312.321 8.49233 310 8.49222C307.678 8.49233 305.445 9.42393 303.763 11.0948C303.636 11.2238 303.434 11.222 303.31 11.0909L302.098 9.81448C302.035 9.74803 301.999 9.65806 302 9.56448C302.001 9.47089 302.037 9.38108 302.101 9.31546Z" fill="#170E2B"/><path opacity="0.4" d="M343.31 6.01367C344.654 6.15033 345.703 7.28635 345.703 8.66699V15.333C345.703 16.7136 344.654 17.8497 343.31 17.9863L343.037 18H326.667L326.394 17.9863C325.049 17.8496 324 16.7136 324 15.333V8.66699C324 7.28643 325.049 6.15044 326.394 6.01367L326.667 6H343.037L343.31 6.01367ZM326.667 7C325.747 7 325 7.74652 325 8.66699V15.333C325 16.2535 325.747 17 326.667 17H343.037C343.957 16.9998 344.703 16.2533 344.703 15.333V8.66699C344.703 7.74666 343.957 7.00023 343.037 7H326.667ZM346.689 9.88281C347.483 10.2415 348 11.0755 348 12C348 12.9245 347.483 13.7585 346.689 14.1172V9.88281Z" fill="#170E2B"/><rect x="325.973" y="8.11719" width="17.7573" height="7.76471" rx="1.33333" fill="#170E2B"/><path d="M17.25 7.0127V17H15.6025V8.96777L13.1621 9.79492V8.43457L17.0518 7.0127H17.25ZM27.3949 15.6875V17H20.723V15.8721L23.9632 12.3379C24.3187 11.9368 24.599 11.5905 24.804 11.2988C25.0091 11.0072 25.1527 10.7451 25.2347 10.5127C25.3213 10.2757 25.3646 10.0456 25.3646 9.82227C25.3646 9.50781 25.3053 9.2321 25.1869 8.99512C25.0729 8.75358 24.9043 8.56445 24.681 8.42773C24.4577 8.28646 24.1865 8.21582 23.8675 8.21582C23.4984 8.21582 23.1885 8.29557 22.9378 8.45508C22.6872 8.61458 22.498 8.83561 22.3704 9.11816C22.2428 9.39616 22.179 9.71517 22.179 10.0752H20.5316C20.5316 9.49642 20.6637 8.96777 20.9281 8.48926C21.1924 8.00618 21.5752 7.62337 22.0765 7.34082C22.5778 7.05371 23.1816 6.91016 23.888 6.91016C24.5534 6.91016 25.1185 7.02181 25.5833 7.24512C26.0482 7.46842 26.4014 7.78516 26.6429 8.19531C26.889 8.60547 27.012 9.09082 27.012 9.65137C27.012 9.96126 26.9619 10.2689 26.8617 10.5742C26.7614 10.8796 26.6178 11.1849 26.431 11.4902C26.2487 11.791 26.0322 12.0941 25.7816 12.3994C25.5309 12.7002 25.2552 13.0055 24.9544 13.3154L22.8011 15.6875H27.3949ZM28.8102 16.1797C28.8102 15.9245 28.8968 15.7103 29.07 15.5371C29.2432 15.3594 29.4779 15.2705 29.7741 15.2705C30.0749 15.2705 30.3096 15.3594 30.4782 15.5371C30.6514 15.7103 30.738 15.9245 30.738 16.1797C30.738 16.4349 30.6514 16.6491 30.4782 16.8223C30.3096 16.9954 30.0749 17.082 29.7741 17.082C29.4779 17.082 29.2432 16.9954 29.07 16.8223C28.8968 16.6491 28.8102 16.4349 28.8102 16.1797ZM28.8171 10.3555C28.8171 10.1003 28.9037 9.88607 29.0768 9.71289C29.25 9.53516 29.4847 9.44629 29.7809 9.44629C30.0817 9.44629 30.3164 9.53516 30.485 9.71289C30.6582 9.88607 30.7448 10.1003 30.7448 10.3555C30.7448 10.6107 30.6582 10.8249 30.485 10.998C30.3164 11.1712 30.0817 11.2578 29.7809 11.2578C29.4847 11.2578 29.25 11.1712 29.0768 10.998C28.9037 10.8249 28.8171 10.6107 28.8171 10.3555ZM34.334 11.2783H35.3184C35.7012 11.2783 36.0179 11.2122 36.2686 11.0801C36.5238 10.9479 36.7129 10.7656 36.8359 10.5332C36.959 10.3008 37.0205 10.0342 37.0205 9.7334C37.0205 9.41895 36.9635 9.15007 36.8496 8.92676C36.7402 8.69889 36.5716 8.52344 36.3438 8.40039C36.1205 8.27734 35.8356 8.21582 35.4893 8.21582C35.1976 8.21582 34.9333 8.27507 34.6963 8.39355C34.4639 8.50749 34.2793 8.67155 34.1426 8.88574C34.0059 9.09538 33.9375 9.34603 33.9375 9.6377H32.2832C32.2832 9.10905 32.4222 8.63965 32.7002 8.22949C32.9782 7.81934 33.3565 7.49805 33.835 7.26562C34.318 7.02865 34.8604 6.91016 35.4619 6.91016C36.1045 6.91016 36.665 7.01725 37.1436 7.23145C37.6266 7.44108 38.0026 7.75553 38.2715 8.1748C38.5404 8.59408 38.6748 9.11361 38.6748 9.7334C38.6748 10.016 38.6087 10.3031 38.4766 10.5947C38.3444 10.8864 38.1484 11.153 37.8887 11.3945C37.6289 11.6315 37.3053 11.8252 36.918 11.9756C36.5306 12.1214 36.0817 12.1943 35.5713 12.1943H34.334V11.2783ZM34.334 12.5635V11.6611H35.5713C36.1546 11.6611 36.6514 11.7295 37.0615 11.8662C37.4762 12.0029 37.8135 12.1921 38.0732 12.4336C38.333 12.6706 38.5221 12.9417 38.6406 13.2471C38.7637 13.5524 38.8252 13.876 38.8252 14.2178C38.8252 14.6826 38.7409 15.0973 38.5723 15.4619C38.4082 15.8219 38.1735 16.1273 37.8682 16.3779C37.5628 16.6286 37.2051 16.8177 36.7949 16.9453C36.3893 17.0729 35.9473 17.1367 35.4688 17.1367C35.0404 17.1367 34.6302 17.0775 34.2383 16.959C33.8464 16.8405 33.4955 16.665 33.1856 16.4326C32.8757 16.1956 32.6296 15.9017 32.4473 15.5508C32.2695 15.1953 32.1807 14.7852 32.1807 14.3203H33.8281C33.8281 14.6165 33.8965 14.8786 34.0332 15.1064C34.1745 15.3298 34.3705 15.5052 34.6211 15.6328C34.8763 15.7604 35.168 15.8242 35.4961 15.8242C35.8425 15.8242 36.141 15.7627 36.3916 15.6396C36.6423 15.5166 36.8337 15.3343 36.9658 15.0928C37.1025 14.8512 37.1709 14.5596 37.1709 14.2178C37.1709 13.8304 37.0957 13.516 36.9453 13.2744C36.7949 13.0329 36.5807 12.8551 36.3027 12.7412C36.0247 12.6227 35.6966 12.5635 35.3184 12.5635H34.334ZM46.8578 11.1895V12.8164C46.8578 13.5957 46.7803 14.2611 46.6253 14.8125C46.4749 15.3594 46.2562 15.8037 45.9691 16.1455C45.682 16.4873 45.3379 16.738 44.9369 16.8975C44.5404 17.057 44.096 17.1367 43.6039 17.1367C43.2119 17.1367 42.8473 17.0866 42.5101 16.9863C42.1774 16.8861 41.8766 16.7288 41.6078 16.5146C41.3389 16.3005 41.1087 16.0247 40.9173 15.6875C40.7305 15.3457 40.5846 14.9378 40.4798 14.4639C40.3796 13.9899 40.3294 13.4408 40.3294 12.8164V11.1895C40.3294 10.4056 40.4069 9.74479 40.5619 9.20703C40.7168 8.66471 40.9378 8.22493 41.2249 7.8877C41.5121 7.5459 41.8539 7.29753 42.2503 7.14258C42.6514 6.98763 43.098 6.91016 43.5902 6.91016C43.9867 6.91016 44.3512 6.96029 44.6839 7.06055C45.0212 7.15625 45.322 7.30892 45.5863 7.51855C45.8552 7.72819 46.083 8.00163 46.2699 8.33887C46.4613 8.67155 46.6071 9.07487 46.7074 9.54883C46.8076 10.0182 46.8578 10.5651 46.8578 11.1895ZM45.2103 13.0488V10.9434C45.2103 10.5469 45.1875 10.1982 45.1419 9.89746C45.0964 9.59212 45.028 9.33464 44.9369 9.125C44.8503 8.91081 44.7409 8.73763 44.6087 8.60547C44.4766 8.46875 44.3262 8.37077 44.1576 8.31152C43.9889 8.24772 43.7998 8.21582 43.5902 8.21582C43.335 8.21582 43.1071 8.26595 42.9066 8.36621C42.7061 8.46191 42.5374 8.61686 42.4007 8.83105C42.264 9.04525 42.1592 9.3278 42.0863 9.67871C42.0179 10.0251 41.9837 10.4466 41.9837 10.9434V13.0488C41.9837 13.4499 42.0065 13.8031 42.0521 14.1084C42.0977 14.4137 42.166 14.6758 42.2572 14.8945C42.3483 15.1087 42.4577 15.2865 42.5853 15.4277C42.7175 15.5645 42.8678 15.6647 43.0365 15.7285C43.2096 15.7923 43.3988 15.8242 43.6039 15.8242C43.8636 15.8242 44.0938 15.7741 44.2943 15.6738C44.4948 15.5736 44.6634 15.4141 44.8001 15.1953C44.9369 14.972 45.0394 14.6826 45.1078 14.3271C45.1761 13.9717 45.2103 13.5456 45.2103 13.0488Z" fill="#170E2B"/></svg></div>
+        <div class="pl-scroll" id="scroll">
+          <img src="data:image/jpeg;base64,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" alt="상단 바: 매달 든든한 관리비 혜택">
+          <section class="hero" aria-labelledby="calcTitle">
+          <p class="brand">아파트아이 × 디지로카</p>
+          <h1 id="calcTitle">내 관리비로<br><span class="grad">카드 실적 얼마나 채워질까?</span></h1>
+          <p class="q" id="feeLabel">11월 관리비</p>
+          <div class="fees" id="fees"></div>
+          <div class="ring" role="img" id="ringBox" aria-label="">
+            <svg viewBox="0 0 180 180">
+              <defs><linearGradient id="grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4FC3F7"/><stop offset="0.55" stop-color="#8E6CFF"/><stop offset="1" stop-color="#FF4FA3"/></linearGradient></defs>
+              <circle class="bg" cx="90" cy="90" r="76"/><circle class="fg" id="fg" cx="90" cy="90" r="76"/>
+            </svg>
+            <div class="in"><small>지난달 실적</small><strong id="pct">52%</strong><span>기준 50만 원</span></div>
+          </div>
+          <div class="remain"><p id="remainLabel">관리비 외에 더 쓰면 되는 금액</p><strong id="remain">24만 원</strong></div>
+          <div class="disc">
+            <p>실적을 채우면 받는 관리비 할인 (10%)</p>
+            <div class="row" id="r50"><span>실적 50만 원 이상</span><b id="d50">월 6,000원</b></div>
+            <div class="row" id="r100"><span>실적 100만 원 이상</span><b id="d100">월 10,000원</b></div>
+          </div>
+          <p class="event-line pl-ev" id="evLine"><b>최대 15만원 캐시백</b> 이벤트 진행 중 (11.1~11.30)</p>
+          <button class="pill" data-go>카드 혜택 보기</button>
+          <p class="foot">관리비 결제액도 지난달 실적에 포함돼요.<span class="pl-ev"> 15만원 캐시백 이벤트의 이용금액에는 관리비가 포함되지 않아요.</span></p>
+        </section>
+        </div>
+        <div class="sticky"><button data-go>카드 보기</button></div>
+        <div class="toast" id="toast" role="status" aria-live="polite">롯데카드 카드 신청 화면으로 이동합니다</div>
+        <div class="plan-miss" id="plan-miss" hidden>기획서에는 ‘관리비 데이터 없음’ 케이스가 없어요. 이번 달 관리비 있음 화면을 보여줘요.</div>
+      </div>
+    </div>
+  </div>
+  <div class="cap"><b>기획서 v6</b> · <span id="plan-cap">이번 달 관리비 있음</span></div>
+</div>
+<div class="shell">
+<aside class="sidebar">
+  <div class="top"><small>아파트아이 × 디지로카 · 관리비 실적계산기</small><h1>관리비 실적계산기 KV 시안</h1></div>
+  <div class="rail">
+    <div><h2>관리비 케이스</h2><div class="picks cases" id="cpicks"></div></div>
+    <div><h2>캐시백 이벤트</h2><button type="button" class="sw-row" id="evsw" role="switch" aria-checked="true"><span>이벤트 진행 중</span><i></i></button></div>
+    <div><h2>화면 구성</h2><div class="vseg" role="group" aria-label="화면 구성" id="showseg">
+      <button type="button" data-show="design" aria-pressed="true">시안</button>
+      <button type="button" data-show="plan" aria-pressed="false">기획서</button>
+      <button type="button" data-show="both" aria-pressed="false">함께 보기</button>
+    </div></div>
+    <div><h2>보기 방식</h2><div class="vseg" role="group" aria-label="보기 방식">
+      <button type="button" data-view="proto" aria-pressed="true">프로토타입</button>
+      <button type="button" data-view="compare" aria-pressed="false">한눈에 비교</button>
+    </div></div>
+  </div>
+</aside>
+<div class="area">
+<main id="view-proto" class="proto">
+  <section class="stage">
+    <div class="stage-row" id="stage-row">
+      <div class="pcol"><div id="main-phone"></div><b id="cap" hidden></b></div><div class="pcol"><div id="main-phone-n"></div></div>
+    </div>
+  </section>
+</main>
+<main id="view-compare" hidden>
+  <div class="compare"><div class="row" id="cmp"></div></div>
+</main>
+</div></div>
+
+<script>
+window.planSet=(function(){
+const BASE = 500000, TOP = 1000000, RATE = 0.1, CAP50 = 6000, CAP100 = 10000;
+const C = 2 * Math.PI * 76;
+const fg = document.getElementById('fg');
+fg.style.strokeDasharray = C;
+const man = n => (n / 10000).toLocaleString('ko-KR') + '만 원';
+const won = n => n.toLocaleString('ko-KR') + '원';
+
+function render(fee){
+  const ratio = Math.min(1, fee / BASE);
+  const pct = Math.round(ratio * 100);
+  fg.style.strokeDashoffset = C * (1 - ratio);
+  document.getElementById('pct').textContent = pct + '%';
+  const remain = Math.max(0, BASE - fee);
+  if (remain === 0) {
+    document.getElementById('remainLabel').textContent = '관리비만으로 50만 원 실적 달성';
+    document.getElementById('remain').textContent = '추가 사용 없이 할인';
+  } else {
+    document.getElementById('remainLabel').textContent = '관리비 외에 더 쓰면 되는 금액';
+    document.getElementById('remain').textContent = won(remain);
+  }
+  const base = Math.round(fee * RATE);
+  document.getElementById('d50').textContent = '월 ' + won(Math.min(base, CAP50));
+  document.getElementById('d100').textContent = '월 ' + won(Math.min(base, CAP100));
+  document.getElementById('r50').classList.toggle('on', fee >= BASE);
+  document.getElementById('r100').classList.toggle('on', fee >= TOP);
+  document.getElementById('ringBox').setAttribute('aria-label', '관리비로 지난달 실적 ' + pct + '% 채움, 남은 금액 ' + man(remain));
+}
+const DATA = {
+  cur:  { label:'11월 관리비', fee:266880 },
+  prev: { label:'전월(10월) 관리비', fee:248500 },
+  high: { label:'11월 관리비', fee:523000 }
+};
+function setMember(key){
+  const d = DATA[key], box = document.getElementById('fees');
+  document.getElementById('feeLabel').textContent = d.label;
+  if (d.fee >= BASE) {
+    box.className = 'fees';
+    box.innerHTML = '<div class="info"><small>' + d.label + '</small><b>' + won(d.fee) + '</b></div>';
+    render(d.fee);
+  } else {
+    box.className = 'fees two';
+    box.innerHTML = '<button data-v="' + d.fee + '" aria-pressed="true"><small>' + d.label + '</small><b>' + won(d.fee) + '</b></button>'
+                  + '<button data-v="' + BASE + '" aria-pressed="false"><small>관리비가</small><b>50만 원이라면</b></button>';
+    box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      render(+b.dataset.v);
+    }));
+    render(d.fee);
+  }
+}
+let tt;
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+  const t = document.getElementById('toast'); t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 1800);
+}));
+setMember('cur');
+return setMember;
+})();
+</script>
+<script>
+(function(){
+const fmt=n=>Math.round(n).toLocaleString('ko-KR');
+const NAME='홍길동';
+const GOAL=5e5, R=80, CIRC=2*Math.PI*R;
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const V={
+  n:{name:'시안 2',dark:false},
+  b:{name:'B. 답이 먼저',short:'제목이 곧 결과, 말풍선 팁',dark:false,
+    note:'제목 자체가 답이에요(“실적 53% 채웠어요”). 링 가운데는 금액, 할인 조건은 토스식 파란 말풍선 한 줄로만 보여줘요. 읽을 게 가장 적어요.'},
+};
+const CASES={
+  under:{name:'이번 달 관리비 50만 원 미만',short:'11월 관리비 266,880원',month:'11월',fee:266880,tabs:['내 관리비','50만원이라면']},
+  over:{name:'이번 달 관리비 50만 원 이상',short:'11월 관리비 523,000원',month:'11월',fee:523000,tabs:null},
+  nodata:{name:'이번 달 관리비 데이터가 없는 경우',short:'10월 관리비 248,500원',month:'10월',fee:248500,tabs:['10월 관리비','50만원이라면'],tag:'11월 집계 전'},
+  none:{name:'과거 관리비 납부 이력이 아예 없는 경우',short:'지난달 · 이번 달 모두 없음',fee:null,tabs:null,hypOnly:true}
+};
+const state={v:'b',c:'under',view:'proto',ev:true};
+let uid=0;
+
+function model(c,tab){
+  const C=CASES[c],hyp=!!C.hypOnly||(!!C.tabs&&tab===1),f=hyp?GOAL:C.fee,done=f>=GOAL;
+  return{C,hyp,done,left:Math.max(0,GOAL-f),pct:Math.min(100,Math.round(f/GOAL*100))};
+}
+const titleQ=C=>C.hypOnly?`${NAME}님, 관리비로도<br>카드 실적을 채울 수 있어요`:`${NAME}님의 관리비로<br>카드 실적 얼마나 채울까요?`;
+const labelHTML=m=>m.hyp?`<span>관리비가 <b>50만원</b>이라면</span>${m.C.hypOnly?'<span class="tag">예시</span>':''}`
+  :`<span>${m.C.month} 관리비 <b>${fmt(m.C.fee)}원</b></span>${m.C.tag?`<span class="tag">${m.C.tag}</span>`:''}`;
+
+const HEAD=`<div class="ph-head"><div class="ph-status"><svg class="sb-svg" width="360" height="24" aria-hidden="true" viewBox="0 0 360 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="24" fill="white"/><path d="M280.117 13.5C280.702 13.5 281.177 14.0037 281.177 14.625V16.875C281.177 17.4963 280.702 18 280.117 18H279.059C278.474 17.9999 278 17.4962 278 16.875V14.625C278 14.0038 278.474 13.5001 279.059 13.5H280.117ZM285.059 11.25C285.643 11.25 286.117 11.7537 286.117 12.375V16.875C286.117 17.4963 285.643 18 285.059 18H284C283.415 18 282.941 17.4963 282.941 16.875V12.375C282.941 11.7537 283.415 11.25 284 11.25H285.059ZM290 8.625C290.585 8.62501 291.059 9.12869 291.059 9.75V16.875C291.059 17.4963 290.585 18 290 18H288.941C288.357 18 287.883 17.4963 287.883 16.875V9.75C287.883 9.12868 288.357 8.625 288.941 8.625H290ZM294.941 6C295.526 6.00013 296 6.50376 296 7.125V16.875C296 17.4962 295.526 17.9999 294.941 18H293.883C293.298 18 292.823 17.4963 292.823 16.875V7.125C292.823 6.50368 293.298 6 293.883 6H294.941Z" fill="#170E2B"/><path d="M307.686 15.1924C309.022 14.012 310.979 14.012 312.315 15.1924C312.383 15.2559 312.422 15.3459 312.424 15.4405C312.426 15.5351 312.39 15.6271 312.325 15.6934L310.232 17.8985C310.171 17.9633 310.087 18 310 18C309.913 17.9999 309.83 17.9632 309.769 17.8985L307.676 15.6934C307.611 15.627 307.575 15.5351 307.577 15.4405C307.579 15.3458 307.618 15.2558 307.686 15.1924ZM304.894 12.25C307.773 9.45274 312.231 9.45258 315.11 12.25C315.175 12.3156 315.212 12.4057 315.213 12.5C315.214 12.5943 315.179 12.685 315.115 12.752L313.905 14.0293C313.781 14.1596 313.579 14.1621 313.451 14.0352C312.506 13.141 311.275 12.6455 310 12.6455C308.726 12.6462 307.496 13.1416 306.552 14.0352C306.424 14.1621 306.222 14.1597 306.098 14.0293L304.889 12.752C304.825 12.6851 304.789 12.5944 304.79 12.5C304.791 12.4057 304.829 12.3156 304.894 12.25ZM302.101 9.31546C306.517 4.89485 313.484 4.89485 317.899 9.31546C317.963 9.38113 317.999 9.47085 318 9.56448C318.001 9.65805 317.965 9.74807 317.902 9.81448L316.691 11.0909C316.567 11.2218 316.364 11.2237 316.237 11.0948C314.555 9.42393 312.321 8.49233 310 8.49222C307.678 8.49233 305.445 9.42393 303.763 11.0948C303.636 11.2238 303.434 11.222 303.31 11.0909L302.098 9.81448C302.035 9.74803 301.999 9.65806 302 9.56448C302.001 9.47089 302.037 9.38108 302.101 9.31546Z" fill="#170E2B"/><path opacity="0.4" d="M343.31 6.01367C344.654 6.15033 345.703 7.28635 345.703 8.66699V15.333C345.703 16.7136 344.654 17.8497 343.31 17.9863L343.037 18H326.667L326.394 17.9863C325.049 17.8496 324 16.7136 324 15.333V8.66699C324 7.28643 325.049 6.15044 326.394 6.01367L326.667 6H343.037L343.31 6.01367ZM326.667 7C325.747 7 325 7.74652 325 8.66699V15.333C325 16.2535 325.747 17 326.667 17H343.037C343.957 16.9998 344.703 16.2533 344.703 15.333V8.66699C344.703 7.74666 343.957 7.00023 343.037 7H326.667ZM346.689 9.88281C347.483 10.2415 348 11.0755 348 12C348 12.9245 347.483 13.7585 346.689 14.1172V9.88281Z" fill="#170E2B"/><rect x="325.973" y="8.11719" width="17.7573" height="7.76471" rx="1.33333" fill="#170E2B"/><path d="M17.25 7.0127V17H15.6025V8.96777L13.1621 9.79492V8.43457L17.0518 7.0127H17.25ZM27.3949 15.6875V17H20.723V15.8721L23.9632 12.3379C24.3187 11.9368 24.599 11.5905 24.804 11.2988C25.0091 11.0072 25.1527 10.7451 25.2347 10.5127C25.3213 10.2757 25.3646 10.0456 25.3646 9.82227C25.3646 9.50781 25.3053 9.2321 25.1869 8.99512C25.0729 8.75358 24.9043 8.56445 24.681 8.42773C24.4577 8.28646 24.1865 8.21582 23.8675 8.21582C23.4984 8.21582 23.1885 8.29557 22.9378 8.45508C22.6872 8.61458 22.498 8.83561 22.3704 9.11816C22.2428 9.39616 22.179 9.71517 22.179 10.0752H20.5316C20.5316 9.49642 20.6637 8.96777 20.9281 8.48926C21.1924 8.00618 21.5752 7.62337 22.0765 7.34082C22.5778 7.05371 23.1816 6.91016 23.888 6.91016C24.5534 6.91016 25.1185 7.02181 25.5833 7.24512C26.0482 7.46842 26.4014 7.78516 26.6429 8.19531C26.889 8.60547 27.012 9.09082 27.012 9.65137C27.012 9.96126 26.9619 10.2689 26.8617 10.5742C26.7614 10.8796 26.6178 11.1849 26.431 11.4902C26.2487 11.791 26.0322 12.0941 25.7816 12.3994C25.5309 12.7002 25.2552 13.0055 24.9544 13.3154L22.8011 15.6875H27.3949ZM28.8102 16.1797C28.8102 15.9245 28.8968 15.7103 29.07 15.5371C29.2432 15.3594 29.4779 15.2705 29.7741 15.2705C30.0749 15.2705 30.3096 15.3594 30.4782 15.5371C30.6514 15.7103 30.738 15.9245 30.738 16.1797C30.738 16.4349 30.6514 16.6491 30.4782 16.8223C30.3096 16.9954 30.0749 17.082 29.7741 17.082C29.4779 17.082 29.2432 16.9954 29.07 16.8223C28.8968 16.6491 28.8102 16.4349 28.8102 16.1797ZM28.8171 10.3555C28.8171 10.1003 28.9037 9.88607 29.0768 9.71289C29.25 9.53516 29.4847 9.44629 29.7809 9.44629C30.0817 9.44629 30.3164 9.53516 30.485 9.71289C30.6582 9.88607 30.7448 10.1003 30.7448 10.3555C30.7448 10.6107 30.6582 10.8249 30.485 10.998C30.3164 11.1712 30.0817 11.2578 29.7809 11.2578C29.4847 11.2578 29.25 11.1712 29.0768 10.998C28.9037 10.8249 28.8171 10.6107 28.8171 10.3555ZM34.334 11.2783H35.3184C35.7012 11.2783 36.0179 11.2122 36.2686 11.0801C36.5238 10.9479 36.7129 10.7656 36.8359 10.5332C36.959 10.3008 37.0205 10.0342 37.0205 9.7334C37.0205 9.41895 36.9635 9.15007 36.8496 8.92676C36.7402 8.69889 36.5716 8.52344 36.3438 8.40039C36.1205 8.27734 35.8356 8.21582 35.4893 8.21582C35.1976 8.21582 34.9333 8.27507 34.6963 8.39355C34.4639 8.50749 34.2793 8.67155 34.1426 8.88574C34.0059 9.09538 33.9375 9.34603 33.9375 9.6377H32.2832C32.2832 9.10905 32.4222 8.63965 32.7002 8.22949C32.9782 7.81934 33.3565 7.49805 33.835 7.26562C34.318 7.02865 34.8604 6.91016 35.4619 6.91016C36.1045 6.91016 36.665 7.01725 37.1436 7.23145C37.6266 7.44108 38.0026 7.75553 38.2715 8.1748C38.5404 8.59408 38.6748 9.11361 38.6748 9.7334C38.6748 10.016 38.6087 10.3031 38.4766 10.5947C38.3444 10.8864 38.1484 11.153 37.8887 11.3945C37.6289 11.6315 37.3053 11.8252 36.918 11.9756C36.5306 12.1214 36.0817 12.1943 35.5713 12.1943H34.334V11.2783ZM34.334 12.5635V11.6611H35.5713C36.1546 11.6611 36.6514 11.7295 37.0615 11.8662C37.4762 12.0029 37.8135 12.1921 38.0732 12.4336C38.333 12.6706 38.5221 12.9417 38.6406 13.2471C38.7637 13.5524 38.8252 13.876 38.8252 14.2178C38.8252 14.6826 38.7409 15.0973 38.5723 15.4619C38.4082 15.8219 38.1735 16.1273 37.8682 16.3779C37.5628 16.6286 37.2051 16.8177 36.7949 16.9453C36.3893 17.0729 35.9473 17.1367 35.4688 17.1367C35.0404 17.1367 34.6302 17.0775 34.2383 16.959C33.8464 16.8405 33.4955 16.665 33.1856 16.4326C32.8757 16.1956 32.6296 15.9017 32.4473 15.5508C32.2695 15.1953 32.1807 14.7852 32.1807 14.3203H33.8281C33.8281 14.6165 33.8965 14.8786 34.0332 15.1064C34.1745 15.3298 34.3705 15.5052 34.6211 15.6328C34.8763 15.7604 35.168 15.8242 35.4961 15.8242C35.8425 15.8242 36.141 15.7627 36.3916 15.6396C36.6423 15.5166 36.8337 15.3343 36.9658 15.0928C37.1025 14.8512 37.1709 14.5596 37.1709 14.2178C37.1709 13.8304 37.0957 13.516 36.9453 13.2744C36.7949 13.0329 36.5807 12.8551 36.3027 12.7412C36.0247 12.6227 35.6966 12.5635 35.3184 12.5635H34.334ZM46.8578 11.1895V12.8164C46.8578 13.5957 46.7803 14.2611 46.6253 14.8125C46.4749 15.3594 46.2562 15.8037 45.9691 16.1455C45.682 16.4873 45.3379 16.738 44.9369 16.8975C44.5404 17.057 44.096 17.1367 43.6039 17.1367C43.2119 17.1367 42.8473 17.0866 42.5101 16.9863C42.1774 16.8861 41.8766 16.7288 41.6078 16.5146C41.3389 16.3005 41.1087 16.0247 40.9173 15.6875C40.7305 15.3457 40.5846 14.9378 40.4798 14.4639C40.3796 13.9899 40.3294 13.4408 40.3294 12.8164V11.1895C40.3294 10.4056 40.4069 9.74479 40.5619 9.20703C40.7168 8.66471 40.9378 8.22493 41.2249 7.8877C41.5121 7.5459 41.8539 7.29753 42.2503 7.14258C42.6514 6.98763 43.098 6.91016 43.5902 6.91016C43.9867 6.91016 44.3512 6.96029 44.6839 7.06055C45.0212 7.15625 45.322 7.30892 45.5863 7.51855C45.8552 7.72819 46.083 8.00163 46.2699 8.33887C46.4613 8.67155 46.6071 9.07487 46.7074 9.54883C46.8076 10.0182 46.8578 10.5651 46.8578 11.1895ZM45.2103 13.0488V10.9434C45.2103 10.5469 45.1875 10.1982 45.1419 9.89746C45.0964 9.59212 45.028 9.33464 44.9369 9.125C44.8503 8.91081 44.7409 8.73763 44.6087 8.60547C44.4766 8.46875 44.3262 8.37077 44.1576 8.31152C43.9889 8.24772 43.7998 8.21582 43.5902 8.21582C43.335 8.21582 43.1071 8.26595 42.9066 8.36621C42.7061 8.46191 42.5374 8.61686 42.4007 8.83105C42.264 9.04525 42.1592 9.3278 42.0863 9.67871C42.0179 10.0251 41.9837 10.4466 41.9837 10.9434V13.0488C41.9837 13.4499 42.0065 13.8031 42.0521 14.1084C42.0977 14.4137 42.166 14.6758 42.2572 14.8945C42.3483 15.1087 42.4577 15.2865 42.5853 15.4277C42.7175 15.5645 42.8678 15.6647 43.0365 15.7285C43.2096 15.7923 43.3988 15.8242 43.6039 15.8242C43.8636 15.8242 44.0938 15.7741 44.2943 15.6738C44.4948 15.5736 44.6634 15.4141 44.8001 15.1953C44.9369 14.972 45.0394 14.6826 45.1078 14.3271C45.1761 13.9717 45.2103 13.5456 45.2103 13.0488Z" fill="#170E2B"/></svg></div><div class="ph-nav-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>매달 든든한 관리비 혜택</span><span></span></div></div>`;
+const EVENT=`<div class="ct"><div class="ct-top"><section class="ev"><div class="ct-tt"><span class="ct-tag">Event</span><h2>최대 15만원 캐시백</h2><p class="d">아파트관리비 자동납부 신청하고<br>15만원 이상 이용 시</p></div><div class="ct-box"><div><h3>행사 기간</h3><p>26.11.01(일) ~ 26.11.30(월)</p></div><div><h3>대상</h3><p>직전 6개월 간(26.05.01~26.10.31) 모든 롯데 개인 신용카드 이용 이력이 없는 고객</p></div><div><h3>내용</h3><p>2026년 12월 10일(목)까지 대상 카드로 아파트 관리비 자동납부 신청하고 15만원 이상 이용 시 15만원 캐시백 지급<br>(아파트관리비 매출은 이용금액에서 제외됩니다.)</p></div><div><h3>혜택 받는 날</h3><p>2026년 12월 31일(목) 이전</p></div><div><p>※ 롯데카드 제공</p></div></div></section><div class="ct-row"><img src="a/money.png" alt=""><div><b>관리비도 카드 실적 인정</b><span>고정지출 항목도 지난달 실적에 포함</span></div></div></div><section class="ct-ben"><div class="ct-card"><div class="ct-head"><img src="a/cash.png" alt=""><div class="t"><small>카드 서비스</small><b>월 최대 <em>35,500원</em> 결제일 할인</b><p class="l">아파트관리비 10%(월 최대 1만원)<br>이동통신, 대중교통, 온라인쇼핑, 배달앱5%(항목당 월 최대 6천원)<br>스트리밍 1,500원 결제일 할인</p><p class="n">* 지난달 이용실적 50만원 충족 시</p></div></div><table class="ct-tbl"><colgroup><col class="c1"><col class="c2"><col><col></colgroup><tr class="h1"><th colspan="2">지난달 실적</th><th>50만원<br>이상</th><th>100만원<br>이상</th></tr><tr class="h2"><th>항목</th><th>할인율</th><th colspan="2">할인 한도</th></tr><tr><td>아파트<br>관리비</td><td>10%</td><td>6,000원</td><td>10,000원</td></tr><tr><td>온라인 쇼핑</td><td>5%</td><td colspan="2">6,000원</td></tr><tr><td>배달앱</td><td>5%</td><td colspan="2">6,000원</td></tr><tr><td>이동통신</td><td>5%</td><td colspan="2">6,000원</td></tr><tr><td>대중교통</td><td>5%</td><td colspan="2">6,000원</td></tr><tr><td>스트리밍</td><td>-</td><td colspan="2">1,500원</td></tr></table><div class="ct-sub"><div><h4>대상 가맹점</h4><ul><li>온라인 쇼핑 : 쿠팡, 마켓컬리, SSG.COM</li><li>배달앱 : 배달의민족, 쿠팡이츠, 요기요</li><li>이동통신 : SKT, KT, LG U+</li><li>대중교통 : 버스, 지하철</li><li>스트리밍 : 넷플릭스, 유튜브, 왓챠, 멜론, 지니뮤직, 디즈니+</li></ul></div><div><h4>이용 조건</h4><ul><li>건당 2만원 이상 결제 시 제공(단, 스트리밍은 결제금액과 무관)</li><li>이동통신과 스트리밍은 각 월 1회만 적용</li></ul></div><p class="x">자세한 내용은 '카드혜택보기'에서 확인하세요.</p></div></div></section><section class="ct-dis open"><button type="button" class="ct-dtg" aria-expanded="true">유의사항<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2.5 7.75L6 4.25L9.5 7.75" stroke="#2A2A2A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ct-db"><div class="ev-only ct-db"><h5>[이벤트]</h5><p>지난달 실적 및 캐시백 한도 등 자세한 내용은 카드보기에서 확인하세요.</p><p>합산금액은 2026년 12월 10일(목) 승인된 건까지 적용 됩니다. (26년 12월 30일 이내 캐시백 지급)</p><p><u>아파트관리비 매출은 이용금액에서 제외 됩니다.</u></p><p><u>이용금액은 쿠폰 및 포인트 사용 등을 제외한 카드 사용만 인정되며, 가족카드 결제건, 단기카드대출, 장기카드대출, 연회비 납부금액, 승인전표 미매입, 결제취소매출(승인취소, 부분취소, 환불, 가맹점 취소 등), 상품권, 기프트카드, 선불카드 충전 및 구매, 모바일상품권(카카오톡 선물하기, 스타벅스, 배달앱 등) 결제 건은 이용금액에서 제외 됩니다.</u></p><p>혜택 지급 제외 대상</p><p class="s"><u>각 혜택 지급 시점에 대상카드 해지, 다른 카드로 교체, 연체, 탈회한 회원</u></p><p class="s"><u>롯데카드의 다른 모든 이벤트 혜택과 중복 적용되지 않으며, 오프라인(설계사, 카드 영업지점 등)을 통해 소지하고 계신 회원은 대상자에서 제외 됩니다.</u></p><p class="s"><u>해당 행사 직전 6개월간 (26.05.01 ~ 26.10.31) 롯데 개인신용카드 결제이력(가족카드 결제 건, 후불교통카드, 하이패스 요금, 보험료, 아파트관리비 포함) 및 기존 잔여 할부 매출이 있는 회원은 혜택 지급 대상에서 제외됩니다.</u></p><p class="s"><u>이벤트 직전 12개월간 당사에서 진행한 응모하기를 통해 온라인 이벤트 혜택 (캐시백, 포인트, 띵코인)을 제공받은 회원은 대상에서 제외 됩니다.</u></p><p>이 이벤트는 아파트아이 또는 롯데카드 사정에 따라 사전고지없이 종료되거나 변경될 수 있습니다.</p></div><h5>[공통 유의사항]</h5><p>연회비</p><p class="s">대상카드의 연회비 및 서비스 등에 관한 상세사항은 롯데카드 홈페이지를 참고하세요.</p><p class="s">아파트아이 X 디지로카 : 국내전용, 해외겸용 (MASTER, AMEX) 2만원</p><p>롯데카드의 다른 결제일 할인(청구할인) 혜택과 중복시 할인금액이 큰 혜택이 제공됩니다.</p><p>할부 이용 시 이용일 기준 전체 할부 이용금액에 대하여 할인 헤택이 제공됩니다.</p><p>승인시점 기준으로 남은 할인한도 내에서 할인혜택이 제공되며, 남은 월 할인한도는 이월되지 않습니다.</p><p>한 달 동안 이용한 금액이 다음 달에 결제되는 결제건(이동통신, 대중교통 등)은 롯데카드에 접수되는 일자를 기준으로 혜택이 제공됩니다.</p><p><span>할인한도가 복원되기 전에 결제 건은 승인시점 기준 할인한도 내에서 할인혜택이 제공되며, <u>한도 복원 후에 즉시 할인이 되지 않을 수 있습니다.</u></span></p><p><span>결제 취소 건 접수 내역은 롯데카드 홈페이지<br>(www.lottecard.co.kr) 에서 회원가입 후 MY &gt; 이용내역(매출전표) &gt; 정상*취소구분 &gt; 취소 선택 후 조회할 수 있습니다.</span></p><p>(주)아파트아이는 롯데카드(주)의 신용카드 회원 모집 업무를 대리·중개합니다.</p><p>(주)아파트아이는 다수의 신용카드사를 대리·중개합니다.</p><p>(주)아파트아이는 롯데카드(주)의 금융상품에 대한 계약체결 권한이 없습니다.</p><p>(주)아파트아이는 금융관계법률에 따라 롯데카드(주)와 위탁계약을 체결한 금융상품판매 대리·중개업자입니다.</p><p>계약체결 전 금융상품설명서와 약관을 확인하시기 바랍니다.</p><p>서비스 제공 업종은 롯데카드에 등록된 가맹점 업종을 기준으로 합니다.</p><p>신용카드 발급이 부적정한 경우 (개인신용평점 낮음 등) 카드발급이 제한될 수 있습니다.</p><p>카드이용대금과 이에 수반되는 모든 수수료를 지정된 대금 결제일에 상환해야 합니다.</p><p>금융소비자는 금소법 제 19조 제1항에 따라 해당상품 또는 서비스에 대하여 설명을 받을 권리가 있습니다.</p><p class="b">연체이자율 : 회원별, 이용상품별 약정이율+최대 3%, 법정 최고금리(20%) 이내</p><p class="b">단, 연체 발생 시점에 약정이율이 없는 경우 아래와 같이 약정이율</p><p class="s b">일시불 거래 연체 시 : 거래발생 시점의 최소기간(2개월) 유이자 할부 금리</p><p class="s b">무이자 할부 거래 연체 시 : 거래발생 시점의 최소기간(2개월) 유이자 할부 금리</p><p class="s b">그 외의 경우 : 약정이율은 상법상 상사법정이율과 상호금융 가계자금대출금리*중 높은 금리 적용</p><p class="s st b">한국은행에서 매월 발표하는 가장 최근의 비은행 금융기관 가중평균대출금리(신규대출기준)</p><p class="b">상환능력에 비해 신용카드 사용액이 과도할 경우 귀하의 개인신용평점이 하락할 수 있습니다.</p><p class="b">개인 신용평점 하락 시 금융거래와 관련된 불이익이 발생할 수 있습니다.</p><p class="b">일정기간 원리금을 연체할 경우 모든 원금을 변제할 의무가 발생할 수 있습니다.</p><p class="sim">준법감시인 심의필 제2026-E20152호 (2026.11.01~2026.11.30)</p><p class="sim" style="margin-top:0">여신금융협회 심의필 제2026-C1h-13907호 (2026.09.16 ~ 2027.09.15)</p></div></section></div>`;
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function ringHTML(){
+  return `<div class="ring" role="img"><svg viewBox="0 0 176 176" aria-hidden="true">
+    <circle class="track" cx="88" cy="88" r="${R}" fill="none" stroke-width="12"/>
+    <circle class="prog" cx="88" cy="88" r="${R}" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}"/></svg>
+    <div class="r-center"><div class="r-num"><span class="r-big"></span><span class="r-sub"></span></div><div class="r-ok">${CHECK}<span class="r-sub">실적 50만원 달성</span></div></div></div>`;
+}
+let phid=0;
+function phone(v,c){
+  const C=CASES[c],pid=++phid;
+  const seg=`<div class="kv-seg" role="group" aria-label="관리비 보기" data-tab="0"${C.tabs?'':' hidden'}>${(C.tabs||['','']).map((l,i)=>`<button type="button" data-tab="${i}" aria-pressed="${i===0}">${l}</button>`).join('')}</div>`;
+  let body;
+  if(v==='a')body=`<p class="kv-eyebrow">아파트아이 × 디지로카</p><h1 class="kv-title">${titleQ(C)}</h1>${seg}<div class="card"><p class="m-label"></p>${ringHTML()}<p class="res"></p></div>`;
+  else if(v==='b')body=bBody(c);
+  else if(v==='n')body=nBody(c);
+  else body=`<p class="kv-eyebrow">아파트아이 × 디지로카</p><h1 class="kv-title">${titleQ(C)}</h1>${seg}<p class="m-label"></p><div class="card">${ringHTML()}<div class="side"></div></div>`;
+  return `<div class="phone${V[v].dark?' dark':''}${state.ev?'':' no-ev'}" data-v="${v}" data-case="${c}" data-tab="0">${HEAD}<div class="ph-scroll"><div class="kv kv-${v}">${body}<p class="fine">실적 50만원 이상이면 관리비 10% 할인 (월 최대 6,000원)</p></div>${EVENT}</div><button type="button" class="ev-ban" data-ev-go><span class="ev-l"><svg class="ev-spark" width="20" height="19" viewBox="0 0 20 19" fill="none" aria-hidden="true"><path d="M7.12685 5.55148C7.4559 4.64659 8.74825 4.68387 9.02458 5.60623L9.87016 8.42864C9.96705 8.75206 10.2206 9.00476 10.5444 9.10055L12.8892 9.79438C13.833 10.0736 13.8481 11.405 12.9109 11.7055L10.5228 12.4713C10.2112 12.5713 9.96822 12.8173 9.87222 13.1302L9.02286 15.8978C8.74252 16.8113 7.4633 16.8489 7.12977 15.9535L6.06071 13.0834C5.95421 12.7975 5.72301 12.5758 5.43285 12.4815L3.04256 11.7042C2.1104 11.4011 2.12557 10.0771 3.06442 9.79542L5.41128 9.09128C5.71385 9.0005 5.95574 8.77209 6.0637 8.4752L7.12685 5.55148Z" fill="url(#evs0${pid})"/><path d="M15.2955 1.13466C15.4271 0.772698 15.944 0.78761 16.0546 1.15655L16.5795 2.90873C16.6183 3.0381 16.7197 3.13918 16.8492 3.1775L18.3846 3.63181C18.7621 3.74352 18.7681 4.27604 18.3932 4.39627L16.8406 4.8942C16.7159 4.93417 16.6187 5.0326 16.5803 5.15774L16.0539 6.87318C15.9417 7.23858 15.4301 7.25363 15.2966 6.89545L14.6424 5.13903C14.5998 5.02466 14.5073 4.936 14.3913 4.89826L12.8459 4.39575C12.4731 4.2745 12.4791 3.7449 12.8547 3.63223L14.3826 3.17379C14.5037 3.13748 14.6004 3.04611 14.6436 2.92736L15.2955 1.13466Z" fill="url(#evs1${pid})"/><defs><linearGradient id="evs0${pid}" x1="11.2" y1="5.71484" x2="4.44804" y2="16.7927" gradientUnits="userSpaceOnUse"><stop stop-color="#82ECFF"/><stop offset="0.544678" stop-color="#266BFF"/><stop offset="0.965061" stop-color="#4D2DFF"/></linearGradient><linearGradient id="evs1${pid}" x1="17.2289" y1="1.5" x2="13.8529" y2="7.03891" gradientUnits="userSpaceOnUse"><stop stop-color="#82ECFF"/><stop offset="0.544678" stop-color="#266BFF"/><stop offset="0.965061" stop-color="#4D2DFF"/></linearGradient></defs></svg><span class="ev-t"><b>최대 15만원 캐시백</b><span>이벤트 진행 중</span></span></span><span class="ev-go"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6L8 10L12 6" stroke="#3C70FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button><div class="ph-cta"><button type="button">카드 보기</button></div><div class="ph-nav" aria-hidden="true"></div></div>`;
+}
+function tween(el,from,to,ms,f){
+  if(!el)return;
+  if(reduce||from===to){el.textContent=f(to);return}
+  const t0=performance.now();cancelAnimationFrame(el._raf);
+  const step=t=>{const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=f(from+(to-from)*e);if(k<1)el._raf=requestAnimationFrame(step)};
+  el._raf=requestAnimationFrame(step);
+}
+function count(p,sel,key,to,f){const el=p.querySelector(sel);if(!el)return;const from=p['_'+key]??(key==='pct'?0:to*1.25);p['_'+key]=to;tween(el,from,to,900,f)}
+const pctF=v=>String(Math.round(v));
+
+const B_C=135,B_R=118.774,B_TOP=B_C-B_R;
+const B_PATH=`M${B_C} ${B_TOP}A${B_R} ${B_R} 0 1 1 ${B_C} ${B_C+B_R}A${B_R} ${B_R} 0 1 1 ${B_C} ${B_TOP}`;
+let bid=0;
+function bRing(){
+  const id='br'+(++bid);
+  return `<div class="b-ring" role="img"><svg width="270" height="270" viewBox="0 0 270 270" fill="none" aria-hidden="true"><defs>
+  <filter id="${id}i" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feBlend mode="normal" in="SourceGraphic" in2="SourceGraphic" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="ha"/><feOffset dy="2"/><feGaussianBlur stdDeviation="0.5"/><feComposite in2="ha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0"/><feBlend mode="normal" in2="shape"/></filter>
+  <filter id="${id}g" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB"><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feGaussianBlur stdDeviation="9.486"/><feColorMatrix type="matrix" values="0 0 0 0 0.619608 0 0 0 0 0.313726 0 0 0 0 1 0 0 0 0.4 0" result="s"/><feBlend mode="normal" in="SourceGraphic" in2="s"/></filter>
+  <filter id="${id}k" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feGaussianBlur stdDeviation="2"/><feColorMatrix type="matrix" values="0 0 0 0 0.219608 0 0 0 0 0.203922 0 0 0 0 0.439216 0 0 0 0.5 0" result="s"/><feBlend mode="normal" in="SourceGraphic" in2="s"/></filter>
+  <linearGradient id="${id}a" class="b-ga" gradientUnits="userSpaceOnUse" x1="${B_C}" y1="${B_TOP}" x2="${B_C}" y2="${B_C+B_R}"><stop stop-color="#7B41E1"/><stop offset="1" stop-color="#D3C3EF"/></linearGradient>
+  <linearGradient id="${id}b" class="b-gb" gradientUnits="userSpaceOnUse" x1="${B_C}" y1="${B_TOP}" x2="${B_C}" y2="${B_C+B_R}"><stop stop-color="#8753E2" stop-opacity="0"/><stop offset="1" stop-color="#8753E2"/></linearGradient></defs>
+  <mask id="${id}mt" maskUnits="userSpaceOnUse" x="-20" y="-20" width="310" height="310"><circle cx="${B_C}" cy="${B_C}" r="${B_R}" stroke="#fff" stroke-width="32.4519"/><circle cx="${B_C}" cy="${B_C+2}" r="${B_R}" stroke="#000" stroke-width="32.4519"/></mask>
+  <mask id="${id}ma" maskUnits="userSpaceOnUse" x="-20" y="-20" width="310" height="310"><path class="b-arc" d="${B_PATH}" pathLength="100" stroke="#fff" stroke-width="33" stroke-linecap="round" stroke-dasharray="100 100" stroke-dashoffset="100"/><path class="b-arc" transform="translate(0 2)" d="${B_PATH}" pathLength="100" stroke="#000" stroke-width="33" stroke-linecap="round" stroke-dasharray="100 100" stroke-dashoffset="100"/></mask>
+  <circle cx="${B_C}" cy="${B_C}" r="${B_R}" stroke="#B58BFF" stroke-opacity="0.34" stroke-width="32.4519"/>
+  <circle cx="${B_C}" cy="${B_C}" r="${B_R}" stroke="#fff" stroke-opacity="0.5" stroke-width="32.4519" mask="url(#${id}mt)"/>
+  <path class="b-glow" d="${B_PATH}" pathLength="100" stroke="url(#${id}b)" stroke-width="33" stroke-linecap="round" stroke-dasharray="100 100" stroke-dashoffset="100" filter="url(#${id}g)"/>
+  <path class="b-arc" d="${B_PATH}" pathLength="100" stroke="url(#${id}a)" stroke-width="33" stroke-linecap="round" stroke-dasharray="100 100" stroke-dashoffset="100"/>
+  <path d="${B_PATH}" stroke="#fff" stroke-opacity="0.5" stroke-width="33" mask="url(#${id}ma)"/>
+  <g class="b-knobg"><circle cx="${B_C}" cy="${B_TOP}" r="13" fill="#E8EAED" filter="url(#${id}k)"/></g></svg>
+  <div class="b-center"><div><span class="b-lab"></span><span class="b-amt"></span></div><span class="b-cap">(50만원 기준)</span></div></div>`;
+}
+const B_TABS={under:['내 11월 관리비','50만원 이라면'],nodata:['내 10월 관리비','50만원 이라면']};
+const B_ARROW='<svg width="10" height="5" viewBox="0 0 10 5" fill="none" aria-hidden="true"><path d="M0 5L4.64645 0.353553C4.84171 0.158291 5.15829 0.158291 5.35355 0.353553L10 5H0Z" fill="#F1ECFF"/></svg>';
+function bBody(c){
+  const tabs=B_TABS[c];
+  return `<div class="b-title"><p class="b-over">아파트아이 X 디지로카</p><h1 class="b-h"></h1><p class="b-sub">이 카드는 관리비도 실적에 포함돼요</p></div>
+  <div class="b-body"><div class="b-seg" role="group" aria-label="관리비 보기" data-tab="0"${tabs?'':' hidden'}>${(tabs||['','']).map((l,i)=>`<button type="button" data-tab="${i}" aria-pressed="${i===0}">${l}</button>`).join('')}</div>${bRing()}</div>
+  <div class="b-tip">${B_ARROW}<p></p></div>
+  <div class="b-ben"><div class="b-list"><div class="b-card"><span>실적 50만원 이상</span><b>월 6천원 <i>할인</i></b></div><div class="b-card"><span>실적 100만원 이상</span><b>월 1만원 <i>할인</i></b></div></div><p class="b-desc">15만원 캐시백 이벤트의 이용금액에는<br>관리비가 포함되지 않아요</p></div>`;
+}
+const N_C=79.6,N_R=69.674,N_W=19.36;
+const N_PATH=`M${N_C} ${N_C-N_R}A${N_R} ${N_R} 0 1 1 ${N_C} ${N_C+N_R}A${N_R} ${N_R} 0 1 1 ${N_C} ${N_C-N_R}`;
+const N_TABS={under:['11월 관리비','50만 원이라면'],nodata:['10월 관리비','50만 원이라면']};
+function nRing(){const id='nr'+(++bid);
+  return `<div class="n-ring" role="img"><svg viewBox="0 0 159.2 159.2" fill="none" aria-hidden="true"><defs>
+  <linearGradient id="${id}a" gradientUnits="userSpaceOnUse" x1="${N_C}" y1="${N_C-N_R}" x2="${N_C}" y2="${N_C+N_R}"><stop stop-color="#4179E1"/><stop offset="1" stop-color="#C3ECEF"/></linearGradient>
+  <mask id="${id}mt" maskUnits="userSpaceOnUse" x="-10" y="-10" width="180" height="180"><circle cx="${N_C}" cy="${N_C}" r="${N_R}" stroke="#fff" stroke-width="19.04"/><circle cx="${N_C}" cy="${N_C+1.17}" r="${N_R}" stroke="#000" stroke-width="19.04"/></mask>
+  <mask id="${id}ma" maskUnits="userSpaceOnUse" x="-10" y="-10" width="180" height="180"><path class="n-arc" d="${N_PATH}" pathLength="100" stroke="#fff" stroke-width="${N_W}" stroke-linecap="round" stroke-dasharray="100 100" stroke-dashoffset="100"/><path class="n-arc" transform="translate(0 1.17)" d="${N_PATH}" pathLength="100" stroke="#000" stroke-width="${N_W}" stroke-linecap="round" stroke-dasharray="100 100" stroke-dashoffset="100"/></mask></defs>
+  <circle cx="${N_C}" cy="${N_C}" r="${N_R}" stroke="#8BCDFF" stroke-opacity="0.2" stroke-width="19.04"/>
+  <circle cx="${N_C}" cy="${N_C}" r="${N_R}" stroke="#fff" stroke-opacity="0.5" stroke-width="19.04" mask="url(#${id}mt)"/>
+  <path class="n-arc" d="${N_PATH}" pathLength="100" stroke="url(#${id}a)" stroke-width="${N_W}" stroke-linecap="round" stroke-dasharray="100 100" stroke-dashoffset="100"/>
+  <path d="${N_PATH}" stroke="#fff" stroke-opacity="0.5" stroke-width="${N_W}" mask="url(#${id}ma)"/></svg>
+  <div class="n-center"><span class="n-lab">지난달 실적</span><b class="n-pct"><span class="n">0</span>%</b><small class="n-fee"></small></div></div>`;
+}
+function nBody(c){const tabs=N_TABS[c];
+  return `<div class="n-title"><p class="n-over">아파트아이 X 디지로카</p><h1 class="n-h"></h1></div>
+  <div class="n-wrap"><div class="n-card"><div class="n-tabs" role="group" aria-label="관리비 보기"${tabs?'':' hidden'}>${(tabs||['','']).map((l,i)=>`<button type="button" data-tab="${i}" aria-pressed="${i===0}">${l}</button>`).join('')}</div>
+  <div class="n-main">${nRing()}<div class="n-left"><span class="n-ll"></span><b class="n-lv"></b></div></div></div>
+  <div class="n-list"><div><span>실적 50만원 이상</span><b>월 6천원 <i>할인</i></b></div><div><span>실적 100만원 이상</span><b>월 1만원 <i>할인</i></b></div></div>
+  <p class="n-desc b-desc">15만원 캐시백 이벤트의 이용금액에는<br>관리비가 포함되지 않아요</p></div>`;
+}
+function updateN(p,m,tab){
+  const C=m.C;p.querySelectorAll('.n-tabs button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.tab===tab)));
+  const h=p.querySelector('.n-h');
+  if(m.hyp){h.innerHTML='관리비가 50만원이면<br>카드 실적 <em>다</em> 채워요'}
+  else{if(!h.querySelector('.n'))h.innerHTML=`${NAME}님, 관리비만으로<br>카드 실적 <em><span class="n">0</span>%</em> 채웠어요`;
+    count(p,'.n-h .n','hpct',Math.min(100,Math.round(C.fee/5e5*100)),pctF)}
+  count(p,'.n-pct .n','rpct',m.pct,pctF);
+  p.querySelector('.n-fee').textContent=`(${fmt(m.hyp?GOAL:C.fee)}원)`;
+  const ll=p.querySelector('.n-ll'),lv=p.querySelector('.n-lv');
+  if(m.done){ll.textContent=m.hyp?'50만원이면 추가 사용 없이':'관리비만으로 실적 달성';lv.textContent='월 6천원 할인';p._left=undefined}
+  else{ll.textContent='관리비 외에 더 쓰면 되는 금액';lv.innerHTML='<span class="a">0</span>원';count(p,'.n-lv .a','left',m.left,fmt)}
+  p.querySelector('.n-ring').setAttribute('aria-label',m.done?'실적 50만원 달성':`실적 50만원 중 ${m.pct}%`);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>p.querySelectorAll('.n-arc').forEach(el=>el.style.strokeDashoffset=String(100-m.pct))));
+}
+function updateB(p,m,tab){
+  const C=m.C,seg=p.querySelector('.b-seg');seg.dataset.tab=tab;
+  seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.tab===tab)));
+  // 제목은 늘 '내 실제 결과'. 가정(50만원이라면)은 링·툴팁만 바꾸고 '예시' 태그를 붙여요
+  if(C.hypOnly||m.hyp){p.querySelector('.b-h').innerHTML='관리비가 50만원이면<br>카드 실적 <em>다</em> 채워요'}
+  else{const real=Math.min(100,Math.round(C.fee/5e5*100));const h=p.querySelector('.b-h');
+    if(!h.querySelector('.n'))h.innerHTML=`${NAME}님, 관리비만으로<br>카드 실적 <em><span class="n">0</span>%</em> 채웠어요`;
+    count(p,'.b-h .n','pct',real,pctF)}
+  p.querySelector('.b-lab').textContent=m.hyp?'관리비가':`${C.month} 관리비`;
+  const amt=p.querySelector('.b-amt');
+  if(m.hyp){amt.textContent='50만원이면';p._fee=undefined}else{amt.innerHTML='<span class="a">0</span>원';count(p,'.b-amt .a','fee',C.fee,fmt)}
+  p.querySelector('.b-tip p').innerHTML=m.done?'추가 사용 없이 <b>월 6천원 할인</b>돼요':`<span class="n">${fmt(m.left)}원</span> 더 쓰면 <b>월 6천원 할인</b>돼요`;
+  p.querySelector('.b-cap').hidden=!!m.hyp;
+  const ring=p.querySelector('.b-ring');ring.setAttribute('aria-label',m.done?'실적 50만원 달성':`실적 50만원 중 ${m.pct}%`);
+  const a=m.pct/100*2*Math.PI, ex=B_C+B_R*Math.sin(a), ey=B_C-B_R*Math.cos(a);
+  // 100%: Figma 1289:18078 — 전체 링 그라디언트(위→아래), 글로우 없음, 손잡이는 맨 위
+  const full=m.pct>=100;
+  const [x1,y1,x2,y2]=full?[135,0,134.909,250.623]:(m.pct<=50?[B_C,B_TOP,ex,ey]:[B_C,B_TOP,B_C,B_C+B_R]);
+  p.querySelectorAll('.b-ga,.b-gb').forEach(g=>{g.setAttribute('x1',x1);g.setAttribute('y1',y1);g.setAttribute('x2',x2.toFixed(3));g.setAttribute('y2',y2.toFixed(3))});
+  p.querySelector('.b-glow').style.opacity=full?'0':'1';
+  const knob=p.querySelector('.b-knobg');knob.style.opacity='0';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{p.querySelectorAll('.b-arc,.b-glow').forEach(el=>el.style.strokeDashoffset=String(100-m.pct));knob.style.transform=`rotate(${m.pct*3.6}deg)`}));
+}
+function update(p){
+  const v=p.dataset.v,tab=+p.dataset.tab,m=model(p.dataset.case,tab),C=m.C;
+  if(v==='b'){updateB(p,m,tab);return}
+  if(v==='n'){updateN(p,m,tab);return}
+  const seg=p.querySelector('.kv-seg');seg.dataset.tab=tab;
+  seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.tab===tab)));
+  const ring=p.querySelector('.ring');ring.classList.toggle('done',m.done);
+  ring.setAttribute('aria-label',m.done?'실적 50만원 달성':`실적 50만원 중 ${m.pct}%`);
+  const prog=p.querySelector('.prog');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{prog.style.strokeDashoffset=CIRC*(1-m.pct/100)}));
+  const big=p.querySelector('.r-big'),sub=p.querySelector('.r-num .r-sub');
+  if(v==='b'){
+    p.querySelector('.kv-eyebrow').innerHTML=m.hyp?'<span>관리비 예시</span><span class="tag">예시</span>':`<span>${C.month} 관리비 기준</span>${C.tag?`<span class="tag">${C.tag}</span>`:''}`;
+    p.querySelector('.kv-title').innerHTML=m.done?(m.hyp?'관리비가 50만원이면<br><em>실적을 다 채워요</em>':`${NAME}님 관리비로<br><em>실적을 다 채웠어요</em>`):`${NAME}님 관리비로<br>실적 <em><span class="n">0</span>%</em> 채웠어요`;
+    big.innerHTML=m.hyp?'50만<small>원</small>':`<span class="a">0</span><small>원</small>`;
+    sub.textContent='/ 실적 50만원';
+    if(!m.hyp&&!m.done)count(p,'.r-big .a','fee',C.fee,fmt);
+    if(!m.done)count(p,'.kv-title .n','pct',m.pct,pctF);else p._pct=100;
+    p.querySelector('.bubble').innerHTML=m.done?'추가 사용 없이 <b>월 6,000원 할인</b>돼요':`<b>${fmt(m.left)}원</b>만 더 쓰면 월 6,000원 할인돼요`;
+  }else{
+    p.querySelector('.m-label').innerHTML=labelHTML(m);
+    big.innerHTML='<span class="n">0</span><small>%</small>';sub.textContent='실적 50만원 중';
+    count(p,'.r-big .n','pct',m.pct,pctF);
+    if(v==='a'){
+      const res=p.querySelector('.res');
+      if(m.done){res.innerHTML='추가 사용 없이<br><em>월 6,000원 할인</em>돼요'}
+      else{res.innerHTML='<em><span class="a"></span>원</em>만 더 쓰면<br>월 6,000원 할인돼요';count(p,'.res .a','left',m.left,fmt)}
+    }else{
+      const side=p.querySelector('.sidebar');
+      if(m.done){side.innerHTML=`<span>${m.hyp?'50만원이면':'관리비만으로'}</span><b>실적 달성</b><small><em>월 6,000원</em> 할인돼요</small>`}
+      else{side.innerHTML='<span>더 쓰면 되는 금액</span><b><span class="a"></span>원</b><small><em>월 6,000원</em> 할인까지</small>';count(p,'.side .a','left',m.left,fmt)}
+    }
+  }
+}
+// 하단 '카드 보기': 첫 진입엔 숨김, KV 끝을 지나 스크롤하면 아래에서 올라옴
+function ctaCheck(p){const s=p.querySelector('.ph-scroll'),kv=p.querySelector('.kv');if(!s||!kv)return;
+  const on=s.scrollTop>8&&s.scrollTop+s.clientHeight>=kv.offsetTop+kv.offsetHeight+16;p.classList.toggle('cta-on',on);
+  const ev=p.querySelector('.ev');const near=ev&&s.scrollTop+s.clientHeight>=ev.offsetTop+60;
+  p.classList.toggle('ban-off',on||!!near)}
+document.addEventListener('scroll',e=>{const s=e.target;if(s&&s.classList&&s.classList.contains('ph-scroll'))ctaCheck(s.closest('.phone'))},true);
+function mount(host,html){host.innerHTML=html;host.querySelectorAll('.phone').forEach(p=>{update(p);ctaCheck(p);})}
+const PLAN_MAP={under:['cur','이번 달 관리비 있음'],nodata:['prev','이번 달 없음 → 전월'],over:['high','관리비 50만원 이상'],none:['cur','관리비 데이터 없음 (기획서에 없음)']};
+let show='design';
+function setShow(s){show=s;planOn=s!=='design';document.body.classList.toggle('show-plan',s==='plan');
+  document.querySelectorAll('[data-show]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.show===s)));placePlan()}
+let planOn=false;
+function placePlan(){
+  const col=document.getElementById('plan-col');col.hidden=!planOn;
+  const [k,cap]=PLAN_MAP[state.c];
+  if(planOn){window.planSet&&window.planSet(k);document.getElementById('plan-cap').textContent=cap;document.getElementById('plan-miss').hidden=state.c!=='none';
+    const host=state.view==='compare'?document.getElementById('cmp'):document.getElementById('stage-row');
+    if(col.parentNode!==host||host.firstChild!==col)host.insertBefore(col,host.firstChild);}
+  if(typeof fitAll==='function')requestAnimationFrame(fitAll);
+}
+function renderMain(){
+  mount(document.getElementById('main-phone'),phone('b',state.c));
+  mount(document.getElementById('main-phone-n'),phone('n',state.c));
+  document.getElementById('cap').textContent=CASES[state.c].name;
+  document.querySelectorAll('#cpicks button,#cseg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pc===state.c)));
+  placePlan();
+}
+function renderCompare(){
+  const col=document.getElementById('plan-col');document.body.appendChild(col);
+  const E=Object.entries(CASES);
+  mount(document.getElementById('cmp'),`<div class="cmp-rows"><div class="cmp-r">${E.map(([k,C])=>`<div class="cell"><h2>${C.name}</h2>${phone('b',k)}</div>`).join('')}</div><div class="cmp-r">${E.map(([k,C])=>`<div class="cell">${phone('n',k)}<button type="button" data-open-c="${k}">크게 보기</button></div>`).join('')}</div></div>`);
+  placePlan();fitCompare();
+}
+// 한눈에 비교: 화면 폭·높이에 맞춰 전체를 축소해 잘리지 않게
+function fitCompare(){
+  const wrap=document.querySelector('.compare'),row=document.getElementById('cmp');if(!wrap||!row||state.view!=='compare')return;
+  row.style.transform='none';wrap.style.height='';
+  const W=row.scrollWidth,H=row.scrollHeight,aw=wrap.clientWidth,ah=window.innerHeight-wrap.getBoundingClientRect().top-window.scrollY-40;
+  let s=Math.min(1,aw/W,Math.max(.2,ah/H));
+  const apply=()=>{row.style.transform=`translateX(${Math.max(0,(aw-W*s)/2)}px) scale(${s})`;row.style.margin='0';wrap.style.height=Math.ceil(H*s)+'px'};
+  apply();const over=document.documentElement.scrollHeight-window.innerHeight;
+  if(over>0&&s>.2){s=Math.max(.2,s*(H*s-over)/(H*s));apply()}
+}
+// 프로토타입: 폰·기획서가 화면 높이 안에 들어오게 축소 → 페이지 스크롤 없음
+function fitProto(){
+  const row=document.getElementById('stage-row');if(!row||state.view!=='proto')return;
+  row.style.zoom='1';
+  if(window.innerWidth<=860)return;
+  const st=row.parentNode,W=row.scrollWidth,H=row.getBoundingClientRect().height,top=row.getBoundingClientRect().top+window.scrollY;
+  const s=Math.min(1.3,st.clientWidth/W,(window.innerHeight-top-36)/H);
+  row.style.zoom=String(Math.max(.5,s));
+  const over=document.documentElement.scrollHeight-window.innerHeight;
+  if(over>0&&s>.5)row.style.zoom=String(Math.max(.5,s*(H*s-over)/(H*s)));
+}
+function fitAll(){fitCompare();fitProto()}
+window.addEventListener('resize',fitAll);
+function setView(v){
+  state.view=v;
+  document.getElementById('view-proto').hidden=v!=='proto';
+  document.getElementById('view-compare').hidden=v!=='compare';
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+  if(v==='compare')renderCompare();else placePlan();
+  requestAnimationFrame(fitAll);
+  try{history.replaceState(null,'','#'+v)}catch(e){}
+}
+document.getElementById('cpicks').innerHTML=Object.entries(CASES).map(([k,C])=>`<button type="button" data-pc="${k}"><span>${C.name}</span><i></i></button>`).join('');
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.classList.contains('ct-dtg')){const d=t.closest('.ct-dis'),o=d.classList.toggle('open');t.setAttribute('aria-expanded',String(o));return}
+  if('evGo' in t.dataset){const p=t.closest('.phone'),s=p.querySelector('.ph-scroll'),ev=p.querySelector('.ev');if(s&&ev)s.scrollTo({top:ev.offsetTop-8,behavior:reduce?'auto':'smooth'});return}
+  if(t.id==='evsw'){state.ev=!state.ev;t.setAttribute('aria-checked',String(state.ev));const sc=document.querySelector('.plan .pl-screen');if(sc)sc.classList.toggle('hide-ev',!state.ev);renderMain();if(state.view==='compare')renderCompare();return}
+  if(t.dataset.show){setShow(t.dataset.show);return}
+  if(t.closest('.plan'))return;
+  if(t.dataset.view)setView(t.dataset.view);
+  else if(t.dataset.pv){state.v=t.dataset.pv;renderMain()}
+  else if(t.dataset.pc){state.c=t.dataset.pc;renderMain();if(state.view==='compare')renderCompare()}
+  else if(t.dataset.tab!==undefined){const p=t.closest('.phone');if(p.dataset.tab!==t.dataset.tab){p.dataset.tab=t.dataset.tab;update(p)}}
+  else if(t.dataset.openC){state.c=t.dataset.openC;renderMain();setView('proto');window.scrollTo(0,0)}
+});
+renderMain();
+setView((location.hash||'').slice(1)==='compare'?'compare':'proto');
+window.addEventListener('hashchange',()=>{const x=location.hash.slice(1);if(x==='compare'||x==='proto')setView(x)});
+})();
+</script>
+
+</body>
+</html>
